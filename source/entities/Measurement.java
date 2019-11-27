@@ -17,6 +17,7 @@ public class Measurement {
 		this.time = time;
 		this.value = value;
 	}
+
 	public String getDeviceId() {
 		return deviceId;
 	}

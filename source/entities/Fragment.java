@@ -1,31 +1,68 @@
 package entities;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.json.simple.JSONArray;
-
 public class Fragment {
-	
+
 	private String deviceId;
 	private String type;
 	private String unit;
 	private LocalDate date;
-	private JSONArray data;
-	
+	private List<Measurement> measurements;
+
 	public Fragment(String deviceId, String type, String unit, LocalDate date) {
 		this.deviceId = deviceId;
 		this.type = type;
 		this.unit = unit;
 		this.date = date;
-		this.data = new JSONArray();
+		this.measurements = new LinkedList<Measurement>();
 	}
+
+	public Fragment(String deviceId, String type, String unit, LocalDate date, List<Measurement> measurements) {
+		this.deviceId = deviceId;
+		this.type = type;
+		this.unit = unit;
+		this.date = date;
+		this.measurements = measurements;
+	}
+
+	public Fragment() {
+
+	}
+
+	public String getMeasurementsJsonString(boolean asArray) {
+		String json = new String();
+		if (asArray)
+			json = "[";
+		for (int i = 0; i < getMeasurements().size(); i++) {
+			Measurement measurement = getMeasurements().get(i);
+			json = json + "\n\t{";
+			json = json + "\n\t\t\"deviceId\": \"" + measurement.getDeviceId() + "\",";
+			json = json + "\n\t\t\"type\": \"" + measurement.getType() + "\",";
+			json = json + "\n\t\t\"unit\": \"" + measurement.getUnit() + "\",";
+			json = json + "\n\t\t\"time\": \"" + measurement.getTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+					+ "\",";
+			json = json + "\n\t\t\"value\": " + measurement.getValue();
+			if (i + 1 < getMeasurements().size())
+				json = json + "\n\t},";
+			else {
+				json = json + "\n\t}";
+			}
+		}
+		if (asArray)
+			json = json + "\n]";
+		return json;
+	}
+
 	@Override
 	public String toString() {
-		return "Fragment [deviceId=" + deviceId + ", type=" + type + ", unit=" + unit + ", date=" + date + ", data="
-				+ data + "]";
+		return "Fragment [deviceId=" + deviceId + ", type=" + type + ", unit=" + unit + ", date=" + date
+				+ ", measurements=" + measurements + "]";
 	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -101,12 +138,12 @@ public class Fragment {
 		this.date = date;
 	}
 
-	public JSONArray getData() {
-		return data;
+	public List<Measurement> getMeasurements() {
+		return measurements;
 	}
 
-	public void setData(JSONArray data) {
-		this.data = data;
+	public void setMeasurements(List<Measurement> measurements) {
+		this.measurements = measurements;
 	}
-	
+
 }
