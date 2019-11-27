@@ -1,6 +1,5 @@
 package services;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -8,6 +7,7 @@ import java.util.List;
 
 import entities.Fragment;
 import utils.DatabaseService;
+import utils.FileService;
 
 public class DataService {
 
@@ -24,18 +24,8 @@ public class DataService {
 	}
 
 	private static void provideFragments(String location, int dataUserId, List<Fragment> fragments) {
-		int no = 0;
-		for (File fileEntry : new File(location).listFiles()) {
-			if (fileEntry.getName().contains("dataUser_" + dataUserId + "_request")) {
-				int curNo = Integer.parseInt(fileEntry.getName().split("_request_")[1].split("\\.")[0]);
-				if (curNo > no) {
-					no = curNo;
-				}
-			}
-		}
-		no = no + 1;
-		try (FileWriter file = new FileWriter(
-				location + "/dataUser_" + dataUserId + "_request_" + no + ".json")) {
+		try (FileWriter file = new FileWriter(FileService.getFileName(location,
+				"dataUser_" + dataUserId, "_request_"))){
 			String json = "[";
 			for (int i = 0; i < fragments.size(); i++) {
 				json = json + fragments.get(i).getMeasurementsJsonString(false);

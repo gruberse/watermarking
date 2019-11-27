@@ -8,7 +8,7 @@ import services.DetectionService;
 import utils.DatabaseService;
 import utils.FileService;
 
-public class testdriver {
+public class TestDriver {
 
 	public static void main(String[] args) {
 		DatabaseService.cleanupTable(DatabaseService.Tables.fragments);
@@ -26,7 +26,9 @@ public class testdriver {
 		DataService.getDataset("files/", 1, "DexG4Rec_SM45143452", "cbg", "mmol/L", LocalDate.of(2015, 12, 1),
 				LocalDate.of(2015, 12, 31));
 		
-		DetectionService.detectDataLeakage("files/watermarked.json", "files/");
+		DetectionService.detectDataLeakage("files/dataUser_1_request_1.json", "files/");
+		DetectionService.detectDataLeakage("files/dataUser_1_request_1.json", "files/");
+		DetectionService.detectDataLeakage("files/dataUser_2_request_1.json", "files/");
 	}
 
 }
