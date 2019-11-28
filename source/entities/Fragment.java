@@ -11,6 +11,7 @@ public class Fragment {
 	private String type;
 	private String unit;
 	private LocalDate date;
+	private int secretKey;
 	private List<Measurement> measurements;
 
 	public Fragment(String deviceId, String type, String unit, LocalDate date) {
@@ -20,23 +21,9 @@ public class Fragment {
 		this.date = date;
 		this.measurements = new LinkedList<Measurement>();
 	}
-
-	public Fragment(String deviceId, String type, String unit, LocalDate date, List<Measurement> measurements) {
-		this.deviceId = deviceId;
-		this.type = type;
-		this.unit = unit;
-		this.date = date;
-		this.measurements = measurements;
-	}
-
-	public Fragment() {
-
-	}
-
-	public String getMeasurementsJsonString(boolean asArray) {
+	
+	public String getMeasurementsAsJsonString() {
 		String json = new String();
-		if (asArray)
-			json = "[";
 		for (int i = 0; i < getMeasurements().size(); i++) {
 			Measurement measurement = getMeasurements().get(i);
 			json = json + "\n\t{";
@@ -52,9 +39,32 @@ public class Fragment {
 				json = json + "\n\t}";
 			}
 		}
-		if (asArray)
-			json = json + "\n]";
 		return json;
+	}
+	
+	public String getMeasurementsAsJsonArrayString() {
+		String json = "[";
+		for (int i = 0; i < getMeasurements().size(); i++) {
+			Measurement measurement = getMeasurements().get(i);
+			json = json + "\n\t{";
+			json = json + "\n\t\t\"deviceId\": \"" + measurement.getDeviceId() + "\",";
+			json = json + "\n\t\t\"type\": \"" + measurement.getType() + "\",";
+			json = json + "\n\t\t\"unit\": \"" + measurement.getUnit() + "\",";
+			json = json + "\n\t\t\"time\": \"" + measurement.getTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+					+ "\",";
+			json = json + "\n\t\t\"value\": " + measurement.getValue();
+			if (i + 1 < getMeasurements().size())
+				json = json + "\n\t},";
+			else {
+				json = json + "\n\t}";
+			}
+		}
+		json = json + "\n]";
+		return json;
+	}
+
+	public Fragment() {
+
 	}
 
 	@Override
@@ -146,4 +156,11 @@ public class Fragment {
 		this.measurements = measurements;
 	}
 
+	public int getSecretKey() {
+		return secretKey;
+	}
+
+	public void setSecretKey(int secretKey) {
+		this.secretKey = secretKey;
+	}
 }
