@@ -11,40 +11,52 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import entities.Fragment;
-import entities.Measurement;
-import utils.FragmentationService.From;
+import utils.FragmentationService.Source;
 
 public class DatabaseService {
 
-	public static void updateRequest(int dataUserId, String deviceId, LocalDateTime timestamp, String type, String unit,
+	/**
+	 * updates existing request.
+	 * 
+	 * @param dataUserId identification of the requesting data user
+	 * @param timestamp  the request's new timestamp
+	 * @param deviceId   the requested fragment's device
+	 * @param type       the requested fragment's type
+	 * @param unit       the requested fragment's unit
+	 * @param date       the requested fragment's date
+	 */
+	public static void updateRequest(int dataUserId, LocalDateTime timestamp, String deviceId, String type, String unit,
 			LocalDate date) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
+			// get the request's timestamps
 			ArrayList<Timestamp> timestamps = new ArrayList<>();
-
 			String sql = "SELECT timestamps FROM requests "
 					+ "WHERE \"dataUserId\" = ? AND \"deviceId\" = ? AND type = ? AND unit = ? AND date = ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setInt(1, dataUserId);
 			preparedStatement.setString(2, deviceId);
 			preparedStatement.setString(3, type);
 			preparedStatement.setString(4, unit);
 			preparedStatement.setDate(5, Date.valueOf(date));
+
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {
 				timestamps = new ArrayList<Timestamp>(
 						Arrays.asList((Timestamp[]) resultSet.getArray("timestamps").getArray()));
 			}
-			timestamps.add(Timestamp.valueOf(timestamp));
 
+			// adds the new timestamp
+			timestamps.add(Timestamp.valueOf(timestamp));
 			sql = "UPDATE requests SET timestamps = ? "
 					+ "WHERE \"dataUserId\" = ? AND \"deviceId\" = ? AND type = ? AND unit = ? AND date = ?";
+
 			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setArray(1, connection.createArrayOf("timestamp", timestamps.toArray()));
 			preparedStatement.setInt(2, dataUserId);
@@ -61,18 +73,28 @@ public class DatabaseService {
 		}
 	}
 
-	public static void insertRequest(int dataUserId, String deviceId, LocalDateTime timestamp, String type, String unit,
-			LocalDate date, Double[] watermark) {
+	/**
+	 * inserts new request.
+	 * 
+	 * @param dataUserId identification of the requesting data user
+	 * @param timestamp  the request's new timestamp
+	 * @param watermark  the generated watermark
+	 * @param deviceId   the requested fragment's device
+	 * @param type       the requested fragment's type
+	 * @param unit       the requested fragment's unit
+	 * @param date       the requested fragment's date
+	 */
+	public static void insertRequest(int dataUserId, LocalDateTime timestamp, Double[] watermark, String deviceId,
+			String type, String unit, LocalDate date) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
 			String sql = "INSERT INTO requests (\"dataUserId\", \"deviceId\", timestamps, type, unit, date, watermark) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-
 			Timestamp[] timestamps = new Timestamp[1];
 			timestamps[0] = Timestamp.valueOf(timestamp);
 
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setInt(1, dataUserId);
 			preparedStatement.setString(2, deviceId);
 			preparedStatement.setArray(3, connection.createArrayOf("timestamp", timestamps));
@@ -89,7 +111,17 @@ public class DatabaseService {
 		}
 	}
 
-	public static Double[] getWatermark(String deviceId, String type, String unit, LocalDate date, int datUserId) {
+	/**
+	 * get a request's watermark.
+	 * 
+	 * @param dataUserId identification of the requesting data user
+	 * @param deviceId   the requested fragment's device
+	 * @param type       the requested fragment's type
+	 * @param unit       the requested fragment's unit
+	 * @param date       the requested fragment's date
+	 * @return if watermark exists then return watermark, else return null
+	 */
+	public static Double[] getWatermark(int dataUserId, String deviceId, String type, String unit, LocalDate date) {
 		Double[] watermark = null;
 
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
@@ -97,10 +129,10 @@ public class DatabaseService {
 
 			String sql = "SELECT watermark FROM requests WHERE \"deviceId\" = ? AND \"dataUserId\" = ? AND type = ? AND unit = ? "
 					+ "AND date = ?";
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, deviceId);
-			preparedStatement.setInt(2, datUserId);
+			preparedStatement.setInt(2, dataUserId);
 			preparedStatement.setString(3, type);
 			preparedStatement.setString(4, unit);
 			preparedStatement.setDate(5, Date.valueOf(date));
@@ -109,25 +141,36 @@ public class DatabaseService {
 			while (resultSet.next()) {
 				watermark = (Double[]) resultSet.getArray("watermark").getArray();
 			}
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-
 		return watermark;
 	}
 
+	/**
+	 * get requested fragments.
+	 * 
+	 * @param deviceId the requested fragments' device
+	 * @param type     the requested fragments' type
+	 * @param unit     the requested fragments' unit
+	 * @param from     the beginning of the requested time period
+	 * @param to       the end of the requested time period
+	 * @return list of fragments
+	 */
 	public static List<Fragment> getFragments(String deviceId, String type, String unit, LocalDate from, LocalDate to) {
-		List<Fragment> list = new LinkedList<>();
+		List<Fragment> fragments = new LinkedList<>();
+
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
 			String sql = "SELECT \"deviceId\", type, unit, date, measurements, \"secretKey\" FROM fragments "
 					+ "WHERE \"deviceId\" = ? AND type = ? AND unit = ? " + "AND date BETWEEN ? AND ?";
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, deviceId);
 			preparedStatement.setString(2, type);
 			preparedStatement.setString(3, unit);
@@ -141,36 +184,93 @@ public class DatabaseService {
 				fragment.setType(resultSet.getString("type"));
 				fragment.setUnit(resultSet.getString("unit"));
 				fragment.setDate(LocalDate.parse(resultSet.getString("date")));
-				List<Measurement> measurements = FragmentationService.getMeasurementsFromJson(From.String,
-						resultSet.getString("measurements"));
-				Collections.sort(measurements);
-				fragment.setMeasurements(measurements);
+				fragment.setMeasurements(
+						// converting from json string to list of measurements
+						FragmentationService.getMeasurements(Source.String, resultSet.getString("measurements")));
 				fragment.setSecretKey(resultSet.getInt("secretKey"));
-				list.add(fragment);
+				fragments.add(fragment);
 			}
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		return list;
+		return fragments;
 	}
 
-	public static void uploadFragments(List<Fragment> fragments) {
+	/**
+	 * get requested fragments.
+	 * 
+	 * @param noOfDevices the requested number of devices
+	 * @param type        the requested fragments' type
+	 * @param unit        the requested fragments' unit
+	 * @param from        the beginning of the requested time period
+	 * @param to          the end of the requested time period
+	 * @return list of fragments
+	 */
+	public static List<Fragment> getFragments(int noOfDevices, String type, String unit, LocalDate from, LocalDate to) {
+		List<Fragment> fragments = new LinkedList<>();
+		List<String> deviceIds = new LinkedList<>();
+
+		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
+				"postgres", "admin")) {
+
+			// get all deviceIds
+			String sql = "SELECT distinct \"deviceId\" FROM fragments "
+					+ "WHERE type = ? AND unit = ? AND date BETWEEN ? AND ?";
+
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, type);
+			preparedStatement.setString(2, unit);
+			preparedStatement.setDate(3, Date.valueOf(from));
+			preparedStatement.setDate(4, Date.valueOf(to));
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			while (resultSet.next()) {
+				deviceIds.add(resultSet.getString("deviceId"));
+			}
+
+			resultSet.close();
+			preparedStatement.close();
+			connection.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		// in case less devices then requested are available
+		if (noOfDevices > deviceIds.size()) {
+			noOfDevices = deviceIds.size();
+		}
+
+		// get fragments for each requested device
+		for (int i = 0; i < noOfDevices; i++) {
+			System.out.println(deviceIds.get(i));
+			fragments.addAll(getFragments(deviceIds.get(i), type, unit, from, to));
+		}
+
+		return fragments;
+	}
+
+	/**
+	 * inserts list of fragments.
+	 * 
+	 * @param fragments list of fragments
+	 */
+	public static void insertFragments(List<Fragment> fragments) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
 			String sql = "INSERT INTO fragments (\"deviceId\", type, unit, date, measurements, \"secretKey\") VALUES "
 					+ "(?, ?, ?, ?, ?::JSON, ?)";
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			for (Fragment fragment : fragments) {
 				preparedStatement.setString(1, fragment.getDeviceId());
 				preparedStatement.setString(2, fragment.getType());
 				preparedStatement.setString(3, fragment.getUnit());
 				preparedStatement.setDate(4, Date.valueOf(fragment.getDate()));
-				Collections.sort(fragment.getMeasurements());
 				preparedStatement.setObject(5, fragment.getMeasurementsAsJsonArrayString());
 				preparedStatement.setInt(6, fragment.getSecretKey());
 				preparedStatement.executeUpdate();
@@ -183,13 +283,22 @@ public class DatabaseService {
 		}
 	}
 
+	/**
+	 * the database tables
+	 */
 	public enum Tables {
 		fragments, requests, ucs
 	}
 
-	public static void cleanupTable(Tables table) {
+	/**
+	 * deletes the content from a table
+	 * 
+	 * @param table the database table
+	 */
+	public static void deleteTable(Tables table) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
+
 			String sql = "DELETE FROM ";
 			if (table == Tables.fragments) {
 				sql = sql + "fragments";
@@ -200,8 +309,10 @@ public class DatabaseService {
 			} else {
 				return;
 			}
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.executeUpdate();
+
 			preparedStatement.close();
 			connection.close();
 		} catch (SQLException ex) {

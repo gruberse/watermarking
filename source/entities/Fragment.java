@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Fragment {
+public class Fragment implements Comparable<Fragment> {
 
 	private String deviceId;
 	private String type;
@@ -14,6 +14,10 @@ public class Fragment {
 	private int secretKey;
 	private List<Measurement> measurements;
 
+	public Fragment() {
+
+	}
+
 	public Fragment(String deviceId, String type, String unit, LocalDate date) {
 		this.deviceId = deviceId;
 		this.type = type;
@@ -21,7 +25,11 @@ public class Fragment {
 		this.date = date;
 		this.measurements = new LinkedList<Measurement>();
 	}
-	
+
+	public String getMeasurementsAsJsonArrayString() {
+		return "[" + getMeasurementsAsJsonString() + "\n]";
+	}
+
 	public String getMeasurementsAsJsonString() {
 		String json = new String();
 		for (int i = 0; i < getMeasurements().size(); i++) {
@@ -42,46 +50,18 @@ public class Fragment {
 		return json;
 	}
 	
-	public String getMeasurementsAsJsonArrayString() {
-		String json = "[";
-		for (int i = 0; i < getMeasurements().size(); i++) {
-			Measurement measurement = getMeasurements().get(i);
-			json = json + "\n\t{";
-			json = json + "\n\t\t\"deviceId\": \"" + measurement.getDeviceId() + "\",";
-			json = json + "\n\t\t\"type\": \"" + measurement.getType() + "\",";
-			json = json + "\n\t\t\"unit\": \"" + measurement.getUnit() + "\",";
-			json = json + "\n\t\t\"time\": \"" + measurement.getTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-					+ "\",";
-			json = json + "\n\t\t\"value\": " + measurement.getValue();
-			if (i + 1 < getMeasurements().size())
-				json = json + "\n\t},";
-			else {
-				json = json + "\n\t}";
-			}
-		}
-		json = json + "\n]";
-		return json;
-	}
-
-	public Fragment() {
-
-	}
-
 	@Override
 	public String toString() {
 		return "Fragment [deviceId=" + deviceId + ", type=" + type + ", unit=" + unit + ", date=" + date
 				+ ", measurements=" + measurements + "]";
 	}
-
+	
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((date == null) ? 0 : date.hashCode());
-		result = prime * result + ((deviceId == null) ? 0 : deviceId.hashCode());
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
-		result = prime * result + ((unit == null) ? 0 : unit.hashCode());
-		return result;
+	public int compareTo(Fragment o) {
+		if (getDate() == null || o.getDate() == null) {
+			return 0;
+		}
+		return getDate().compareTo(o.getDate());
 	}
 
 	@Override
