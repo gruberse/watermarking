@@ -67,7 +67,7 @@ public class DataService {
 	 */
 	private static void provideDataset(String folderLocation, int dataUserId, List<Fragment> fragments) {
 		try (FileWriter file = new FileWriter(
-				FileService.getFileName(folderLocation, "dataUser" + dataUserId, "request"))) {
+				FileService.getFileName(folderLocation, "dataUser" + dataUserId, "request", ".json"))) {
 			String json = "[";
 			for (int i = 0; i < fragments.size(); i++) {
 				json = json + fragments.get(i).getMeasurementsAsJsonString();

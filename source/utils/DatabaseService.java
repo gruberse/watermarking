@@ -114,12 +114,52 @@ public class DatabaseService {
 	/**
 	 * get a request's watermark.
 	 * 
+	 * @param watermark the embedded watermark
+	 * @param deviceId  the fragment's device
+	 * @param type      the fragment's type
+	 * @param unit      the fragment's unit
+	 * @param date      the fragment's date
+	 * @return dataUserId
+	 */
+	public static int getDataUserId(Double[] watermark, String deviceId, String type, String unit, LocalDate date) {
+		int dataUserId = 0;
+
+		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
+				"postgres", "admin")) {
+
+			String sql = "SELECT \"dataUserId\" FROM requests WHERE watermark = ? AND \"deviceId\" = ? AND type = ? AND unit = ? "
+					+ "AND date = ?";
+
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setArray(1, connection.createArrayOf("float8", watermark));
+			preparedStatement.setString(2, deviceId);
+			preparedStatement.setString(3, type);
+			preparedStatement.setString(4, unit);
+			preparedStatement.setDate(5, Date.valueOf(date));
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			if (resultSet.next()) {
+				dataUserId = resultSet.getInt("dataUserId");
+			}
+
+			resultSet.close();
+			preparedStatement.close();
+			connection.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return dataUserId;
+	}
+
+	/**
+	 * get a request's watermark.
+	 * 
 	 * @param dataUserId identification of the requesting data user
 	 * @param deviceId   the requested fragment's device
 	 * @param type       the requested fragment's type
 	 * @param unit       the requested fragment's unit
 	 * @param date       the requested fragment's date
-	 * @return if watermark exists then return watermark, else return null
+	 * @return watermark
 	 */
 	public static Double[] getWatermark(int dataUserId, String deviceId, String type, String unit, LocalDate date) {
 		Double[] watermark = null;
@@ -152,6 +192,44 @@ public class DatabaseService {
 	}
 
 	/**
+	 * get a fragment's watermarks.
+	 * 
+	 * @param deviceId the requested fragment's device
+	 * @param type     the requested fragment's type
+	 * @param unit     the requested fragment's unit
+	 * @param date     the requested fragment's date
+	 * @return list of watermarks
+	 */
+	public static List<Double[]> getWatermarks(String deviceId, String type, String unit, LocalDate date) {
+		List<Double[]> watermarks = new LinkedList<>();
+
+		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
+				"postgres", "admin")) {
+
+			String sql = "SELECT watermark FROM requests WHERE \"deviceId\" = ? AND type = ? AND unit = ? "
+					+ "AND date = ?";
+
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, deviceId);
+			preparedStatement.setString(2, type);
+			preparedStatement.setString(3, unit);
+			preparedStatement.setDate(4, Date.valueOf(date));
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			while (resultSet.next()) {
+				watermarks.add((Double[]) resultSet.getArray("watermark").getArray());
+			}
+
+			resultSet.close();
+			preparedStatement.close();
+			connection.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return watermarks;
+	}
+
+	/**
 	 * get requested fragments.
 	 * 
 	 * @param deviceId the requested fragments' device
@@ -176,6 +254,53 @@ public class DatabaseService {
 			preparedStatement.setString(3, unit);
 			preparedStatement.setDate(4, Date.valueOf(from));
 			preparedStatement.setDate(5, Date.valueOf(to));
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			while (resultSet.next()) {
+				Fragment fragment = new Fragment();
+				fragment.setDeviceId(resultSet.getString("deviceId"));
+				fragment.setType(resultSet.getString("type"));
+				fragment.setUnit(resultSet.getString("unit"));
+				fragment.setDate(LocalDate.parse(resultSet.getString("date")));
+				fragment.setMeasurements(
+						// converting from json string to list of measurements
+						FragmentationService.getMeasurements(Source.String, resultSet.getString("measurements")));
+				fragment.setSecretKey(resultSet.getInt("secretKey"));
+				fragments.add(fragment);
+			}
+
+			resultSet.close();
+			preparedStatement.close();
+			connection.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return fragments;
+	}
+
+	/**
+	 * get requested fragments.
+	 * 
+	 * @param deviceId the fragments' device
+	 * @param type     the fragments' type
+	 * @param unit     the fragments' unit
+	 * @param date     the fragment's date
+	 * @return list of fragments
+	 */
+	public static List<Fragment> getFragments(String deviceId, String type, String unit, LocalDate date) {
+		List<Fragment> fragments = new LinkedList<>();
+
+		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
+				"postgres", "admin")) {
+
+			String sql = "SELECT \"deviceId\", type, unit, date, measurements, \"secretKey\" FROM fragments "
+					+ "WHERE \"deviceId\" = ? AND type = ? AND unit = ? " + "AND date = ?";
+
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, deviceId);
+			preparedStatement.setString(2, type);
+			preparedStatement.setString(3, unit);
+			preparedStatement.setDate(4, Date.valueOf(date));
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {
@@ -246,7 +371,6 @@ public class DatabaseService {
 
 		// get fragments for each requested device
 		for (int i = 0; i < noOfDevices; i++) {
-			System.out.println(deviceIds.get(i));
 			fragments.addAll(getFragments(deviceIds.get(i), type, unit, from, to));
 		}
 

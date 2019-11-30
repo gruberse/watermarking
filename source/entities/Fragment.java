@@ -25,7 +25,7 @@ public class Fragment implements Comparable<Fragment> {
 		this.date = date;
 		this.measurements = new LinkedList<Measurement>();
 	}
-
+	
 	public String getMeasurementsAsJsonArrayString() {
 		return "[" + getMeasurementsAsJsonString() + "\n]";
 	}
