@@ -41,14 +41,13 @@ public class DetectionService {
 	}
 
 	/*
-	 * provides detection report.
+	 * generates file name. writes report to file.
 	 */
 	private static void provideReport(String reportLocation, String report) {
-		try (FileWriter file = new FileWriter(FileService.getFileName(reportLocation, "detection", "Report", ".txt"))) {
-			file.write(report);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
+		// writes report to file
+		FileService.writeFile(
+				// generates file name
+				FileService.getFileName(reportLocation, "detection", "Report", ".txt"), report);
 	}
 
 	/*
@@ -238,8 +237,6 @@ public class DetectionService {
 	 * rounds a double value based on a given number of places
 	 */
 	public static double round(double value, int places) {
-		BigDecimal bigDecimal = BigDecimal.valueOf(value);
-		bigDecimal = bigDecimal.setScale(places, RoundingMode.HALF_UP);
-		return bigDecimal.doubleValue();
+		return BigDecimal.valueOf(value).setScale(places, RoundingMode.HALF_UP).doubleValue();
 	}
 }

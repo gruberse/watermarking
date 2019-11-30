@@ -1,9 +1,25 @@
 package utils;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 public class FileService {
+	
+	/**
+	 * creates a file and writes content to it.
+	 * 
+	 * @param fileName file name including the folder
+	 * @param fileContent file content which is written to the file
+	 */
+	public static void writeFile(String fileName, String fileContent) {
+		try (FileWriter file = new FileWriter(fileName)) {
+			file.write(fileContent);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
 
 	/**
 	 * deletes files from the folder location containing the name parts.

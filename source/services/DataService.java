@@ -63,22 +63,21 @@ public class DataService {
 	}
 
 	/*
-	 * provides dataset to the folder location.
+	 * creates json array as string. generates file name. writes json to file.
 	 */
-	private static void provideDataset(String folderLocation, int dataUserId, List<Fragment> fragments) {
-		try (FileWriter file = new FileWriter(
-				FileService.getFileName(folderLocation, "dataUser" + dataUserId, "request", ".json"))) {
-			String json = "[";
-			for (int i = 0; i < fragments.size(); i++) {
-				json = json + fragments.get(i).getMeasurementsAsJsonString();
-				if (i + 1 < fragments.size())
-					json = json + ",";
-			}
-			json = json + "\n]";
-			file.write(json);
-		} catch (IOException ex) {
-			ex.printStackTrace();
+	private static void provideDataset(String requestLocation, int dataUserId, List<Fragment> fragments) {
+		String json = "[";
+		for (int i = 0; i < fragments.size(); i++) {
+			json = json + fragments.get(i).getMeasurementsAsJsonString();
+			if (i + 1 < fragments.size())
+				json = json + ",";
 		}
+		json = json + "\n]";
+		
+		// writes json to file
+		FileService.writeFile(
+				// generates file name
+				FileService.getFileName(requestLocation, "dataUser", "request", ".json"), json);
 	}
 
 	/*
