@@ -1,7 +1,6 @@
 package entities;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,8 +29,34 @@ public class DataProfile {
 		this.relativeCurvatureDistribution = new LinkedList<>();
 	}
 	
-	public void setRelativeValueDistributionFromStringArrayList() {
-		
+	public void setRelativeValueDistributionFromStringArray(String[] array) {
+		this.relativeValueDistribution = new LinkedList<>();
+		for(int i = 0; i < array.length; i++) {
+			BigDecimal minimum = new BigDecimal(array[i].split(",")[0].replace("[", ""));
+			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split(")")[0]);
+			BigDecimal value = new BigDecimal(array[i].split(": ")[1]);
+			this.relativeValueDistribution.add(new Bin<BigDecimal>(minimum, maximum, value));
+		}
+	}
+	
+	public void setRelativeSlopeDistributionFromStringArray(String[] array) {
+		this.relativeSlopeDistribution = new LinkedList<>();
+		for(int i = 0; i < array.length; i++) {
+			BigDecimal minimum = new BigDecimal(array[i].split(",")[0].replace("[", ""));
+			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split(")")[0]);
+			BigDecimal value = new BigDecimal(array[i].split(": ")[1]);
+			this.relativeSlopeDistribution.add(new Bin<BigDecimal>(minimum, maximum, value));
+		}
+	}
+	
+	public void setRelativeCurvatureDistributionFromStringArray(String[] array) {
+		this.relativeCurvatureDistribution = new LinkedList<>();
+		for(int i = 0; i < array.length; i++) {
+			BigDecimal minimum = new BigDecimal(array[i].split(",")[0].replace("[", ""));
+			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split(")")[0]);
+			BigDecimal value = new BigDecimal(array[i].split(": ")[1]);
+			this.relativeCurvatureDistribution.add(new Bin<BigDecimal>(minimum, maximum, value));
+		}
 	}
 	
 	public String[] getRelativeValueDistributionAsStringArray(){

@@ -1,11 +1,19 @@
 package entities;
 
+import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class Fragment implements Comparable<Fragment> {
 
@@ -31,6 +39,47 @@ public class Fragment implements Comparable<Fragment> {
 		this.measurements = new LinkedList<Measurement>();
 	}
 	
+	public Fragment(String deviceId, String type, String unit, int frequency, LocalDate date, long secretKey,
+			String datasetId) {
+		super();
+		this.deviceId = deviceId;
+		this.type = type;
+		this.unit = unit;
+		this.frequency = frequency;
+		this.date = date;
+		this.secretKey = secretKey;
+		this.datasetId = datasetId;
+	}
+
+	public void setMeasurementsFromJsonArrayString(String measurements) {
+		this.measurements = new LinkedList<Measurement>();
+
+		try {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			JSONParser parser = new JSONParser();
+			JSONArray array = (JSONArray) parser.parse(measurements);
+
+			// retrieve measurements
+			for (Object object : array) {
+				JSONObject measurementObject = (JSONObject) object;
+
+				String deviceId = (String) measurementObject.get("deviceId");
+				String type = (String) measurementObject.get("type");
+				String unit = (String) measurementObject.get("unit");
+				String timeString = (String) measurementObject.get("time");
+				if (timeString.contains("T")) {
+					timeString = timeString.replace("T", " ");
+				}
+				LocalDateTime time = LocalDateTime.parse(timeString, formatter);
+				BigDecimal value = new BigDecimal((String) measurementObject.get("value"));
+
+				this.measurements.add(new Measurement(deviceId, type, unit, time, value));
+			}
+		} catch (ParseException ex) {
+			ex.printStackTrace();
+		}
+	}
+
 	public String getMeasurementsAsJsonArrayString() {
 		return "[" + getMeasurementsAsJsonString() + "\n]";
 	}
@@ -54,19 +103,19 @@ public class Fragment implements Comparable<Fragment> {
 		}
 		return json;
 	}
-	
+
 	public BigDecimal getMean() {
 		BigDecimal mean = new BigDecimal("0.0");
-		
-		for(Measurement measurement : getMeasurements()) {
+
+		for (Measurement measurement : getMeasurements()) {
 			mean = mean.add(measurement.getValue());
 		}
-		
+
 		mean = mean.divide(BigDecimal.valueOf(getMeasurements().size()), 15, RoundingMode.HALF_UP);
 
 		return mean;
 	}
-	
+
 	@Override
 	public int compareTo(Fragment o) {
 		if (getDate() == null || o.getDate() == null) {
