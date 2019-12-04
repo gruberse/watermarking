@@ -2,7 +2,6 @@ package generators;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -70,7 +69,7 @@ public class DataGenerator {
 			int noOfUpclining = 0;
 
 			for (LocalDate date : from.datesUntil(to).collect(Collectors.toList())) {
-				Fragment fragment = new Fragment(deviceId, type, unit, date);
+				Fragment fragment = new Fragment(); // 
 
 				// generate Measurements
 				int hour = 0;
@@ -97,8 +96,8 @@ public class DataGenerator {
 						value = value - nextValue;
 					}
 					
-					Measurement measurement = new Measurement(deviceId, type, unit, time, value);
-					fragment.getMeasurements().add(measurement);
+					//Measurement measurement = new Measurement(deviceId, type, unit, time, value);
+					//fragment.getMeasurements().add(measurement);
 					
 					minute = minute + 5;
 					if(minute >= 60) {

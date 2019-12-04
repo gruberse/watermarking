@@ -83,7 +83,8 @@ public class DetectionService {
 			Fragment matchingOriginalFragment = new Fragment();
 			Double fragmentSimilarity = 0.0;
 			HashMap<Fragment, Double> matchingOriginalFragments = new HashMap<>();
-			for (Fragment fragment : DatabaseService.getFragments(suspiciousFragment.getDeviceId(),
+			// search for mean first, no date dependent search
+			/*for (Fragment fragment : DatabaseService.getFragments(suspiciousFragment.getDeviceId(),
 					suspiciousFragment.getType(), suspiciousFragment.getUnit(), suspiciousFragment.getDate())) {
 
 				Collections.sort(fragment.getMeasurements());
@@ -97,7 +98,7 @@ public class DetectionService {
 					fragmentSimilarity = currentFragmentSimilarity;
 					matchingOriginalFragment = fragment;
 				}
-			}
+			}*/
 
 			if (fragmentSimilarity >= fragmentSimilarityThreshold) {
 
@@ -111,8 +112,8 @@ public class DetectionService {
 				// extract embedded watermark
 				Double[] noisyWatermark = new Double[suspiciousFragment.getMeasurements().size()];
 				for (int j = 0; j < noisyWatermark.length; j++) {
-					noisyWatermark[j] = suspiciousFragment.getMeasurements().get(j).getValue()
-							- matchingOriginalFragment.getMeasurements().get(j).getValue();
+					/*noisyWatermark[j] = suspiciousFragment.getMeasurements().get(j).getValue()
+							- matchingOriginalFragment.getMeasurements().get(j).getValue();*/
 				}
 				report = report + "\nextracted noisy watermark:\t\t" + Arrays.toString(noisyWatermark);
 
@@ -120,7 +121,7 @@ public class DetectionService {
 				Double[] matchingOriginalWatermark = new Double[matchingOriginalFragment.getMeasurements().size()];
 				Double watermarkSimilarity = 0.0;
 				HashMap<Double[], Double> matchingOriginalWatermarks = new HashMap<>();
-				for (Double[] watermark : DatabaseService.getWatermarks(matchingOriginalFragment.getDeviceId(),
+				/*for (Double[] watermark : DatabaseService.getWatermarks(matchingOriginalFragment.getDeviceId(),
 						matchingOriginalFragment.getType(), matchingOriginalFragment.getUnit(),
 						matchingOriginalFragment.getDate())) {
 
@@ -134,7 +135,7 @@ public class DetectionService {
 						watermarkSimilarity = currentWatermarkSimilarity;
 						matchingOriginalWatermark = watermark;
 					}
-				}
+				}*/
 
 				if (watermarkSimilarity >= watermarkSimilarityThreshold) {
 					// print matching original watermark
@@ -197,8 +198,7 @@ public class DetectionService {
 		List<Double> distances = new LinkedList<>();
 		double totalDistance = 0.0;
 		for (int i = 0; i < originalFragment.getMeasurements().size(); i++) {
-			double distance = suspiciousFragment.getMeasurements().get(i).getValue()
-					- originalFragment.getMeasurements().get(i).getValue();
+			double distance = 0.0; //suspiciousFragment.getMeasurements().get(i).getValue() - originalFragment.getMeasurements().get(i).getValue();
 			distances.add(distance);
 			totalDistance = totalDistance + distance;
 		}

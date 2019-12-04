@@ -1,5 +1,6 @@
 package entities;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Measurement implements Comparable<Measurement> {
@@ -8,9 +9,9 @@ public class Measurement implements Comparable<Measurement> {
 	private String type;
 	private String unit;
 	private LocalDateTime time;
-	private Double value;
+	private BigDecimal value;
 
-	public Measurement(String deviceId, String type, String unit, LocalDateTime time, Double value) {
+	public Measurement(String deviceId, String type, String unit, LocalDateTime time, BigDecimal value) {
 		super();
 		this.deviceId = deviceId;
 		this.type = type;
@@ -65,11 +66,11 @@ public class Measurement implements Comparable<Measurement> {
 		this.time = time;
 	}
 
-	public Double getValue() {
+	public BigDecimal getValue() {
 		return value;
 	}
 
-	public void setValue(Double value) {
+	public void setValue(BigDecimal value) {
 		this.value = value;
 	}
 }

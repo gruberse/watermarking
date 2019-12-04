@@ -1,5 +1,7 @@
 package entities;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
@@ -10,18 +12,21 @@ public class Fragment implements Comparable<Fragment> {
 	private String deviceId;
 	private String type;
 	private String unit;
+	private int frequency;
 	private LocalDate date;
-	private int secretKey;
+	private long secretKey;
+	private String datasetId;
 	private List<Measurement> measurements;
 
 	public Fragment() {
 
 	}
 
-	public Fragment(String deviceId, String type, String unit, LocalDate date) {
+	public Fragment(String deviceId, String type, String unit, int frequency, LocalDate date) {
 		this.deviceId = deviceId;
 		this.type = type;
 		this.unit = unit;
+		this.frequency = frequency;
 		this.date = date;
 		this.measurements = new LinkedList<Measurement>();
 	}
@@ -50,10 +55,16 @@ public class Fragment implements Comparable<Fragment> {
 		return json;
 	}
 	
-	@Override
-	public String toString() {
-		return "Fragment [deviceId=" + deviceId + ", type=" + type + ", unit=" + unit + ", date=" + date
-				+ ", measurements=" + measurements + "]";
+	public BigDecimal getMean() {
+		BigDecimal mean = new BigDecimal("0.0");
+		
+		for(Measurement measurement : getMeasurements()) {
+			mean = mean.add(measurement.getValue());
+		}
+		
+		mean = mean.divide(BigDecimal.valueOf(getMeasurements().size()), 15, RoundingMode.HALF_UP);
+
+		return mean;
 	}
 	
 	@Override
@@ -82,6 +93,8 @@ public class Fragment implements Comparable<Fragment> {
 			if (other.deviceId != null)
 				return false;
 		} else if (!deviceId.equals(other.deviceId))
+			return false;
+		if (frequency != other.frequency)
 			return false;
 		if (type == null) {
 			if (other.type != null)
@@ -120,6 +133,14 @@ public class Fragment implements Comparable<Fragment> {
 		this.unit = unit;
 	}
 
+	public int getFrequency() {
+		return frequency;
+	}
+
+	public void setFrequency(int frequency) {
+		this.frequency = frequency;
+	}
+
 	public LocalDate getDate() {
 		return date;
 	}
@@ -128,19 +149,27 @@ public class Fragment implements Comparable<Fragment> {
 		this.date = date;
 	}
 
+	public long getSecretKey() {
+		return secretKey;
+	}
+
+	public void setSecretKey(long secretKey) {
+		this.secretKey = secretKey;
+	}
+
+	public String getDatasetId() {
+		return datasetId;
+	}
+
+	public void setDatasetId(String datasetId) {
+		this.datasetId = datasetId;
+	}
+
 	public List<Measurement> getMeasurements() {
 		return measurements;
 	}
 
 	public void setMeasurements(List<Measurement> measurements) {
 		this.measurements = measurements;
-	}
-
-	public int getSecretKey() {
-		return secretKey;
-	}
-
-	public void setSecretKey(int secretKey) {
-		this.secretKey = secretKey;
 	}
 }

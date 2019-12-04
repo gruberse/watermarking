@@ -2,6 +2,7 @@ package utils;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
@@ -18,52 +19,36 @@ import entities.Measurement;
 
 public class FragmentationService {
 
-	/**
-	 * retrieves measurements from a json file consisting of an array. constructs
-	 * fragments from the retrieved measurements.
-	 * 
-	 * @param fileLocation file location of json array
-	 * @return list of fragments
-	 */
 	public static List<Fragment> getFragments(String fileLocation) {
 		List<Fragment> fragments = new LinkedList<>();
 		Random prng = new Random();
 
 		// retrieve measurements from a json file
-		List<Measurement> measurements = getMeasurements(Source.File, fileLocation);
+		List<Measurement> measurements = getMeasurements("file", fileLocation);
 
 		// constructs fragments from the retrieved measurements
 		for (Measurement measurement : measurements) {
-			Fragment fragment = new Fragment(measurement.getDeviceId(), measurement.getType(), measurement.getUnit(),
-					measurement.getTime().toLocalDate());
+			Fragment fragment = new Fragment(); //measurement.getDeviceId(), measurement.getType(), measurement.getUnit(),
+					//measurement.getTime().toLocalDate());
 
 			if (fragments.contains(fragment)) {
-				fragments.get(fragments.indexOf(fragment)).getMeasurements().add(measurement);
+				// update mean
+				fragment = fragments.get(fragments.indexOf(fragment));
+				fragment.getMeasurements().add(measurement);
+				// add to list
+				fragments.set(fragments.indexOf(fragment), fragment);
 			} else {
 				fragment.getMeasurements().add(measurement);
 				// add secret key for watermark embedding
 				fragment.setSecretKey(Math.abs(prng.nextInt()));
+				// add to list
 				fragments.add(fragment);
 			}
 		}
 		return fragments;
 	}
 
-	/**
-	 * the json's source type
-	 */
-	public enum Source {
-		String, File
-	}
-
-	/**
-	 * retrieves measurements from a json file consisting of an array.
-	 * 
-	 * @param source the json's source type
-	 * @param json   the json string or the json file location
-	 * @return list of measurements
-	 */
-	public static List<Measurement> getMeasurements(Source source, String json) {
+	public static List<Measurement> getMeasurements(String source, String json) {
 		List<Measurement> measurements = new LinkedList<>();
 
 		try {
@@ -72,9 +57,9 @@ public class FragmentationService {
 			JSONArray array = new JSONArray();
 
 			// check the json's source type
-			if (source == Source.File) {
+			if (source.contentEquals("file")) {
 				array = (JSONArray) parser.parse(new FileReader(json));
-			} else if (source == Source.String) {
+			} else if (source.contentEquals("string")) {
 				array = (JSONArray) parser.parse(json);
 			} else {
 				return new LinkedList<>();
@@ -95,7 +80,7 @@ public class FragmentationService {
 					timeString = timeString.split("\\.")[0];
 				}
 				LocalDateTime time = LocalDateTime.parse(timeString, formatter);
-				Double value = (Double) measurementObject.get("value");
+				BigDecimal value = new BigDecimal((String) measurementObject.get("value"));
 
 				measurements.add(new Measurement(deviceId, type, unit, time, value));
 			}
