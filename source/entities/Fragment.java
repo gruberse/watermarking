@@ -71,7 +71,7 @@ public class Fragment implements Comparable<Fragment> {
 					timeString = timeString.replace("T", " ");
 				}
 				LocalDateTime time = LocalDateTime.parse(timeString, formatter);
-				BigDecimal value = new BigDecimal((String) measurementObject.get("value"));
+				BigDecimal value = new BigDecimal(measurementObject.get("value").toString());
 
 				this.measurements.add(new Measurement(deviceId, type, unit, time, value));
 			}

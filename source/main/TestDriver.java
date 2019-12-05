@@ -14,17 +14,19 @@ public class TestDriver {
 	public static void main(String[] args) {
 		FileService.deleteFiles("files/", "request");
 		FileService.deleteFiles("files/", "report");
-		//DatabaseService.deleteTable("fragment");
 		DatabaseService.deleteTable("request");
+		//DatabaseService.deleteTable("fragment");
 		//DatabaseService.deleteTable("data_profile");
 		//DatabaseService.deleteTable("usability_constraint");
 
 		//DatabaseService.insertUsabilityConstraint(new UsabilityConstraint("cbg", "mmol/L", 5, new BigDecimal("0.0"),
-		//		new BigDecimal("55.0"), new BigDecimal("0.5"), 10, 256));
+		//		new BigDecimal("55.0"), new BigDecimal("0.5"), 256));
 
 		//ContainerService.uploadDataset("files/testdata.json");
+		//ContainerService.uploadDataset("files/cbg_2017-02-04.json");
 		
-		DataService.getDataset("files/request1By1", 1, "DexG4Rec_SM45143452", "cbg", "mmol/L", 5, LocalDate.of(2015, 12, 15),LocalDate.of(2015, 12, 15));
+		DataService.getDataset("files/request1By1", 1, "DexG5MobRec_SM64305440", "cbg", "mmol/L", 5, LocalDate.of(2017, 2, 4),LocalDate.of(2017, 2, 4));
+		//DataService.getDataset("files/request1By1", 1, "DexG4Rec_SM45143452", "cbg", "mmol/L", 5, LocalDate.of(2015, 12, 15),LocalDate.of(2015, 12, 15));
 		//DataService.getDataset("files/request1By1", 1, "DexG4Rec_SM45143452", "cbg", "mmol/L", 5, LocalDate.of(2015, 12, 15),LocalDate.of(2015, 12, 15));
 		//DataService.getDataset("files/request1By1", 2, "DexG4Rec_SM45143452", "cbg", "mmol/L", 5, LocalDate.of(2015, 12, 15),LocalDate.of(2015, 12, 15));
 		

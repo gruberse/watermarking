@@ -7,14 +7,14 @@ public class UsabilityConstraint {
 	private String type;
 	private String unit;
 	private Integer frequency;
+	private Integer numberOfRanges;
 	private BigDecimal minimumValue;
 	private BigDecimal maximumValue;
 	private BigDecimal maximumError;
-	private Integer numberOfRanges;
 	private Integer numberOfWatermarks;
 	
 	public UsabilityConstraint(String type, String unit, Integer frequency, BigDecimal minimumValue, BigDecimal maximumValue,
-			BigDecimal maximumError, Integer numberOfRanges, Integer numberOfWatermarks) {
+			BigDecimal maximumError, Integer numberOfWatermarks) {
 		super();
 		this.type = type;
 		this.unit = unit;
@@ -22,7 +22,6 @@ public class UsabilityConstraint {
 		this.minimumValue = minimumValue;
 		this.maximumValue = maximumValue;
 		this.maximumError = maximumError;
-		this.numberOfRanges = numberOfRanges;
 		this.numberOfWatermarks = numberOfWatermarks;
 	}
 
@@ -72,14 +71,6 @@ public class UsabilityConstraint {
 
 	public void setMaximumError(BigDecimal maximumError) {
 		this.maximumError = maximumError;
-	}
-
-	public Integer getNumberOfRanges() {
-		return numberOfRanges;
-	}
-
-	public void setNumberOfRanges(Integer numberOfRanges) {
-		this.numberOfRanges = numberOfRanges;
 	}
 
 	public Integer getNumberOfWatermarks() {

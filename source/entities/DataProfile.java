@@ -11,11 +11,14 @@ public class DataProfile {
 	private String type;
 	private String unit;
 	private int frequency;
+	private BigDecimal valueBinSize;
+	private BigDecimal slopeBinSize;
+	private BigDecimal curvatureBinSize;
 	private List<Measurement> measurements;
 	private List<Bin<BigDecimal>> relativeValueDistribution;
 	private List<Bin<BigDecimal>> relativeSlopeDistribution;
 	private List<Bin<BigDecimal>> relativeCurvatureDistribution;
-	
+
 	public DataProfile(String datasetId, String deviceId, String type, String unit, int frequency) {
 		super();
 		this.datasetId = datasetId;
@@ -28,59 +31,89 @@ public class DataProfile {
 		this.relativeSlopeDistribution = new LinkedList<>();
 		this.relativeCurvatureDistribution = new LinkedList<>();
 	}
-	
+
 	public void setRelativeValueDistributionFromStringArray(String[] array) {
 		this.relativeValueDistribution = new LinkedList<>();
-		for(int i = 0; i < array.length; i++) {
+		for (int i = 0; i < array.length; i++) {
 			BigDecimal minimum = new BigDecimal(array[i].split(",")[0].replace("[", ""));
-			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split(")")[0]);
+			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split("\\)")[0]);
 			BigDecimal value = new BigDecimal(array[i].split(": ")[1]);
 			this.relativeValueDistribution.add(new Bin<BigDecimal>(minimum, maximum, value));
 		}
 	}
-	
+
 	public void setRelativeSlopeDistributionFromStringArray(String[] array) {
 		this.relativeSlopeDistribution = new LinkedList<>();
-		for(int i = 0; i < array.length; i++) {
+		for (int i = 0; i < array.length; i++) {
 			BigDecimal minimum = new BigDecimal(array[i].split(",")[0].replace("[", ""));
-			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split(")")[0]);
+			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split("\\)")[0]);
 			BigDecimal value = new BigDecimal(array[i].split(": ")[1]);
 			this.relativeSlopeDistribution.add(new Bin<BigDecimal>(minimum, maximum, value));
 		}
 	}
-	
+
 	public void setRelativeCurvatureDistributionFromStringArray(String[] array) {
 		this.relativeCurvatureDistribution = new LinkedList<>();
-		for(int i = 0; i < array.length; i++) {
+		for (int i = 0; i < array.length; i++) {
 			BigDecimal minimum = new BigDecimal(array[i].split(",")[0].replace("[", ""));
-			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split(")")[0]);
+			BigDecimal maximum = new BigDecimal(array[i].split(",")[1].split("\\)")[0]);
 			BigDecimal value = new BigDecimal(array[i].split(": ")[1]);
 			this.relativeCurvatureDistribution.add(new Bin<BigDecimal>(minimum, maximum, value));
 		}
 	}
-	
-	public String[] getRelativeValueDistributionAsStringArray(){
+
+	public String[] getRelativeValueDistributionAsStringArray() {
 		String[] stringArray = new String[getRelativeValueDistribution().size()];
-		for(int i = 0; i < getRelativeValueDistribution().size(); i++) {
+		for (int i = 0; i < getRelativeValueDistribution().size(); i++) {
 			stringArray[i] = getRelativeValueDistribution().get(i).toString();
 		}
 		return stringArray;
 	}
-	
-	public String[] getRelativeSlopeDistributionAsStringArray(){
+
+	public List<Bin<BigDecimal>> getRelativeValueDistributionBins(BigDecimal minimum, BigDecimal maximum) {
+		List<Bin<BigDecimal>> bins = new LinkedList<>();
+		for (Bin<BigDecimal> bin : getRelativeValueDistribution()) {
+			if (bin.getMinimum().compareTo(minimum) >= 0 && bin.getMaximum().compareTo(maximum) <= 0) {
+				bins.add(bin);
+			}
+		}
+		return bins;
+	}
+
+	public String[] getRelativeSlopeDistributionAsStringArray() {
 		String[] stringArray = new String[getRelativeSlopeDistribution().size()];
-		for(int i = 0; i < getRelativeSlopeDistribution().size(); i++) {
+		for (int i = 0; i < getRelativeSlopeDistribution().size(); i++) {
 			stringArray[i] = getRelativeSlopeDistribution().get(i).toString();
 		}
 		return stringArray;
 	}
 	
-	public String[] getRelativeCurvatureDistributionAsStringArray(){
+	public List<Bin<BigDecimal>> getRelativeSlopeDistributionBins(BigDecimal minimum, BigDecimal maximum) {
+		List<Bin<BigDecimal>> bins = new LinkedList<>();
+		for (Bin<BigDecimal> bin : getRelativeSlopeDistribution()) {
+			if (bin.getMinimum().compareTo(minimum) >= 0 && bin.getMaximum().compareTo(maximum) <= 0) {
+				bins.add(bin);
+			}
+		}
+		return bins;
+	}
+
+	public String[] getRelativeCurvatureDistributionAsStringArray() {
 		String[] stringArray = new String[getRelativeCurvatureDistribution().size()];
-		for(int i = 0; i < getRelativeCurvatureDistribution().size(); i++) {
+		for (int i = 0; i < getRelativeCurvatureDistribution().size(); i++) {
 			stringArray[i] = getRelativeCurvatureDistribution().get(i).toString();
 		}
 		return stringArray;
+	}
+	
+	public List<Bin<BigDecimal>> getRelativeCurvatureDistributionBins(BigDecimal minimum, BigDecimal maximum) {
+		List<Bin<BigDecimal>> bins = new LinkedList<>();
+		for (Bin<BigDecimal> bin : getRelativeCurvatureDistribution()) {
+			if (bin.getMinimum().compareTo(minimum) >= 0 && bin.getMaximum().compareTo(maximum) <= 0) {
+				bins.add(bin);
+			}
+		}
+		return bins;
 	}
 
 	@Override
@@ -168,7 +201,7 @@ public class DataProfile {
 	public List<Bin<BigDecimal>> getRelativeValueDistribution() {
 		return relativeValueDistribution;
 	}
-	
+
 	public void setRelativeValueDistribution(List<Bin<BigDecimal>> relativeValueDistribution) {
 		this.relativeValueDistribution = relativeValueDistribution;
 	}
@@ -187,5 +220,29 @@ public class DataProfile {
 
 	public void setRelativeCurvatureDistribution(List<Bin<BigDecimal>> relativeCurvatureDistribution) {
 		this.relativeCurvatureDistribution = relativeCurvatureDistribution;
+	}
+
+	public BigDecimal getValueBinSize() {
+		return valueBinSize;
+	}
+
+	public void setValueBinSize(BigDecimal valueBinSize) {
+		this.valueBinSize = valueBinSize;
+	}
+
+	public BigDecimal getSlopeBinSize() {
+		return slopeBinSize;
+	}
+
+	public void setSlopeBinSize(BigDecimal slopeBinSize) {
+		this.slopeBinSize = slopeBinSize;
+	}
+
+	public BigDecimal getCurvatureBinSize() {
+		return curvatureBinSize;
+	}
+
+	public void setCurvatureBinSize(BigDecimal curvatureBinSize) {
+		this.curvatureBinSize = curvatureBinSize;
 	}
 }

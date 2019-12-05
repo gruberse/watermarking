@@ -84,35 +84,33 @@ public class ContainerService {
 			}
 
 			// complete data profiles
-			for (DataProfile profile : dataProfiles) {
-				Collections.sort(profile.getMeasurements());
+			for (DataProfile dataProfile : dataProfiles) {
+				Collections.sort(dataProfile.getMeasurements());
 
 				// retrieve usability constraint to choose useful bin sizes
-				UsabilityConstraint usabilityConstraint = DatabaseService.getUsabilityConstraint(profile.getType(),
-						profile.getUnit(), profile.getFrequency());
+				UsabilityConstraint usabilityConstraint = DatabaseService.getUsabilityConstraint(dataProfile.getType(),
+						dataProfile.getUnit(), dataProfile.getFrequency());
 
 				// initialize absolute distributions
-				BigDecimal valueBinSize = usabilityConstraint.getMaximumError().multiply(new BigDecimal(2))
-						.divide(new BigDecimal(usabilityConstraint.getNumberOfRanges()));
+				dataProfile.setValueBinSize(
+						usabilityConstraint.getMaximumError().multiply(new BigDecimal(2)).divide(new BigDecimal(10)));
 				List<Bin<Integer>> absoluteValueDistribution = new LinkedList<>();
 
-				BigDecimal slopeBinSize = usabilityConstraint.getMaximumError().multiply(new BigDecimal(20))
-						.divide(new BigDecimal(usabilityConstraint.getNumberOfRanges()));
+				dataProfile.setSlopeBinSize(dataProfile.getValueBinSize().divide(new BigDecimal(10)));
 				List<Bin<Integer>> absoluteSlopeDistribution = new LinkedList<>();
 
-				BigDecimal curvatureBinSize = usabilityConstraint.getMaximumError().multiply(new BigDecimal(200))
-						.divide(new BigDecimal(usabilityConstraint.getNumberOfRanges()));
+				dataProfile.setCurvatureBinSize(dataProfile.getSlopeBinSize().divide(new BigDecimal(10)));
 				List<Bin<Integer>> absoluteCurvatureDistribution = new LinkedList<>();
 
 				// compute absolute distributions
-				for (int i = 0; i < profile.getMeasurements().size(); i++) {
-					Measurement measurement = profile.getMeasurements().get(i);
+				for (int i = 0; i < dataProfile.getMeasurements().size(); i++) {
+					Measurement measurement = dataProfile.getMeasurements().get(i);
 
 					// compute absolute value distribution
 					BigDecimal value = measurement.getValue();
 					Bin<Integer> valueBin = new Bin<Integer>(
-							value.setScale(valueBinSize.precision(), RoundingMode.DOWN),
-							value.setScale(valueBinSize.precision(), RoundingMode.UP));
+							value.setScale(dataProfile.getValueBinSize().scale(), RoundingMode.DOWN),
+							value.setScale(dataProfile.getValueBinSize().scale(), RoundingMode.UP));
 					if (absoluteValueDistribution.contains(valueBin)) {
 						valueBin = absoluteValueDistribution.get(absoluteValueDistribution.indexOf(valueBin));
 						valueBin.setValue(valueBin.getValue() + 1);
@@ -122,12 +120,12 @@ public class ContainerService {
 					}
 
 					// compute absolute slope distribution, slope(t,t+1) = value(t+1) - value(t)
-					if (i + 1 < profile.getMeasurements().size()) {
-						BigDecimal slope = profile.getMeasurements().get(i + 1).getValue()
+					if (i + 1 < dataProfile.getMeasurements().size()) {
+						BigDecimal slope = dataProfile.getMeasurements().get(i + 1).getValue()
 								.subtract(measurement.getValue());
 						Bin<Integer> slopeBin = new Bin<Integer>(
-								slope.setScale(slopeBinSize.precision(), RoundingMode.DOWN),
-								slope.setScale(slopeBinSize.precision(), RoundingMode.UP));
+								slope.setScale(dataProfile.getSlopeBinSize().scale(), RoundingMode.DOWN),
+								slope.setScale(dataProfile.getSlopeBinSize().scale(), RoundingMode.UP));
 						if (absoluteSlopeDistribution.contains(slopeBin)) {
 							slopeBin = absoluteSlopeDistribution.get(absoluteSlopeDistribution.indexOf(slopeBin));
 							slopeBin.setValue(slopeBin.getValue() + 1);
@@ -139,14 +137,14 @@ public class ContainerService {
 
 					// compute absolute curvature distribution, curvature(t) = slope(t,t+1) -
 					// slope(t-1,t)
-					if (i > 0 && i + 1 < profile.getMeasurements().size()) {
-						BigDecimal curvature = (profile.getMeasurements().get(i + 1).getValue()
+					if (i > 0 && i + 1 < dataProfile.getMeasurements().size()) {
+						BigDecimal curvature = (dataProfile.getMeasurements().get(i + 1).getValue()
 								.subtract(measurement.getValue()))
 										.subtract(measurement.getValue()
-												.subtract(profile.getMeasurements().get(i - 1).getValue()));
+												.subtract(dataProfile.getMeasurements().get(i - 1).getValue()));
 						Bin<Integer> curvatureBin = new Bin<Integer>(
-								curvature.setScale(curvatureBinSize.precision(), RoundingMode.DOWN),
-								curvature.setScale(curvatureBinSize.precision(), RoundingMode.UP));
+								curvature.setScale(dataProfile.getCurvatureBinSize().scale(), RoundingMode.DOWN),
+								curvature.setScale(dataProfile.getCurvatureBinSize().scale(), RoundingMode.UP));
 						if (absoluteCurvatureDistribution.contains(curvatureBin)) {
 							curvatureBin = absoluteCurvatureDistribution
 									.get(absoluteCurvatureDistribution.indexOf(curvatureBin));
@@ -160,34 +158,34 @@ public class ContainerService {
 
 				// compute relative value distribution
 				for (Bin<Integer> valueBin : absoluteValueDistribution) {
-					profile.getRelativeValueDistribution()
+					dataProfile.getRelativeValueDistribution()
 							.add(new Bin<BigDecimal>(valueBin.getMinimum(), valueBin.getMaximum(),
 									new BigDecimal(valueBin.getValue()).divide(
-											new BigDecimal(profile.getMeasurements().size()), 4,
+											new BigDecimal(dataProfile.getMeasurements().size()), 4,
 											RoundingMode.HALF_UP)));
 				}
 
 				// compute relative slope distribution
 				for (Bin<Integer> slopeBin : absoluteSlopeDistribution) {
-					profile.getRelativeSlopeDistribution()
+					dataProfile.getRelativeSlopeDistribution()
 							.add(new Bin<BigDecimal>(slopeBin.getMinimum(), slopeBin.getMaximum(),
 									new BigDecimal(slopeBin.getValue()).divide(
-											new BigDecimal(profile.getMeasurements().size()), 4,
+											new BigDecimal(dataProfile.getMeasurements().size()), 4,
 											RoundingMode.HALF_UP)));
 				}
 
 				// compute relative curvature distribution
 				for (Bin<Integer> curvatureBin : absoluteCurvatureDistribution) {
-					profile.getRelativeCurvatureDistribution()
+					dataProfile.getRelativeCurvatureDistribution()
 							.add(new Bin<BigDecimal>(curvatureBin.getMinimum(), curvatureBin.getMaximum(),
 									new BigDecimal(curvatureBin.getValue()).divide(
-											new BigDecimal(profile.getMeasurements().size()), 4,
+											new BigDecimal(dataProfile.getMeasurements().size()), 4,
 											RoundingMode.HALF_UP)));
 				}
 
-				Collections.sort(profile.getRelativeValueDistribution());
-				Collections.sort(profile.getRelativeSlopeDistribution());
-				Collections.sort(profile.getRelativeCurvatureDistribution());
+				Collections.sort(dataProfile.getRelativeValueDistribution());
+				Collections.sort(dataProfile.getRelativeSlopeDistribution());
+				Collections.sort(dataProfile.getRelativeCurvatureDistribution());
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();
