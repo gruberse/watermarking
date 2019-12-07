@@ -1,4 +1,4 @@
-package generators;
+package testdrivers;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -8,9 +8,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 import entities.Fragment;
-import entities.Measurement;
 import services.ContainerService;
-import utils.FileService;
 
 public class DataGenerator {
 
@@ -45,10 +43,10 @@ public class DataGenerator {
 		}
 		json = json + "\n]";
 
-		String fileName = FileService.getFileName(requestLocation, "generated", "Dataset", ".json");
-		FileService.writeFile(fileName, json);
+		//String fileName = FileService.getFileName(requestLocation, "generated", "Dataset", ".json");
+		//FileService.writeFile(fileName, json);
 
-		return fileName;
+		return "";
 	}
 
 	/*

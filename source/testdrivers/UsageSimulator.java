@@ -1,4 +1,4 @@
-package simulators;
+package testdrivers;
 
 public class UsageSimulator {
 

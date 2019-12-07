@@ -3,8 +3,6 @@ package entities;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 public class Request {
 
@@ -12,18 +10,16 @@ public class Request {
 	private Integer dataUserId;
 	private String type;
 	private String unit;
-	private int frequency;
 	private LocalDate date;
 	private int numberOfWatermark;
 	private ArrayList<LocalDateTime> timestamps;
 	
-	public Request(String deviceId, Integer dataUserId, String type, String unit, int frequency, LocalDate date, int numberOfWatermark, ArrayList<LocalDateTime> timestamps) {
+	public Request(String deviceId, Integer dataUserId, String type, String unit, LocalDate date, int numberOfWatermark, ArrayList<LocalDateTime> timestamps) {
 		super();
 		this.deviceId = deviceId;
 		this.dataUserId = dataUserId;
 		this.type = type;
 		this.unit = unit;
-		this.frequency = frequency;
 		this.date = date;
 		this.numberOfWatermark = numberOfWatermark;
 		this.timestamps = timestamps;
@@ -59,14 +55,6 @@ public class Request {
 
 	public void setUnit(String unit) {
 		this.unit = unit;
-	}
-
-	public int getFrequency() {
-		return frequency;
-	}
-
-	public void setFrequency(int frequency) {
-		this.frequency = frequency;
 	}
 
 	public LocalDate getDate() {

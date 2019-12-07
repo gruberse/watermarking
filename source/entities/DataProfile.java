@@ -10,7 +10,6 @@ public class DataProfile {
 	private String deviceId;
 	private String type;
 	private String unit;
-	private int frequency;
 	private BigDecimal valueBinSize;
 	private BigDecimal slopeBinSize;
 	private BigDecimal curvatureBinSize;
@@ -19,13 +18,12 @@ public class DataProfile {
 	private List<Bin<BigDecimal>> relativeSlopeDistribution;
 	private List<Bin<BigDecimal>> relativeCurvatureDistribution;
 
-	public DataProfile(String datasetId, String deviceId, String type, String unit, int frequency) {
+	public DataProfile(String datasetId, String deviceId, String type, String unit) {
 		super();
 		this.datasetId = datasetId;
 		this.deviceId = deviceId;
 		this.type = type;
 		this.unit = unit;
-		this.frequency = frequency;
 		this.measurements = new LinkedList<>();
 		this.relativeValueDistribution = new LinkedList<>();
 		this.relativeSlopeDistribution = new LinkedList<>();
@@ -117,6 +115,17 @@ public class DataProfile {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((datasetId == null) ? 0 : datasetId.hashCode());
+		result = prime * result + ((deviceId == null) ? 0 : deviceId.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		result = prime * result + ((unit == null) ? 0 : unit.hashCode());
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
@@ -134,8 +143,6 @@ public class DataProfile {
 			if (other.deviceId != null)
 				return false;
 		} else if (!deviceId.equals(other.deviceId))
-			return false;
-		if (frequency != other.frequency)
 			return false;
 		if (type == null) {
 			if (other.type != null)
@@ -180,14 +187,6 @@ public class DataProfile {
 
 	public void setUnit(String unit) {
 		this.unit = unit;
-	}
-
-	public int getFrequency() {
-		return frequency;
-	}
-
-	public void setFrequency(int frequency) {
-		this.frequency = frequency;
 	}
 
 	public List<Measurement> getMeasurements() {

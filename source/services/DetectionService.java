@@ -1,7 +1,5 @@
 package services;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -13,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import entities.Fragment;
-import utils.DatabaseService;
-import utils.FileService;
 import utils.FragmentationService;
 
 public class DetectionService {
@@ -45,9 +41,9 @@ public class DetectionService {
 	 */
 	private static void provideReport(String reportLocation, String report) {
 		// writes report to file
-		FileService.writeFile(
+		//FileService.writeFile(
 				// generates file name
-				FileService.getFileName(reportLocation, "detection", "Report", ".txt"), report);
+				//FileService.getFileName(reportLocation, "detection", "Report", ".txt"), report);
 	}
 
 	/*
@@ -143,9 +139,10 @@ public class DetectionService {
 					report = report + "\nmatching watermark similarity:\t" + round(watermarkSimilarity, 2);
 
 					// detect data leaker
-					int dataLeaker = DatabaseService.getDataUserId(matchingOriginalWatermark,
+					int dataLeaker =  0;
+					/*DatabaseService.getDataUserId(matchingOriginalWatermark,
 							matchingOriginalFragment.getDeviceId(), matchingOriginalFragment.getType(),
-							matchingOriginalFragment.getUnit(), matchingOriginalFragment.getDate());
+							matchingOriginalFragment.getUnit(), matchingOriginalFragment.getDate());*/
 					report = report + "\ndetected data leaker:\t\t\t" + dataLeaker;
 					detectionSummary.put(i + 1, dataLeaker);
 

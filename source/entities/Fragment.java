@@ -1,7 +1,5 @@
 package entities;
 
-import java.io.FileReader;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -20,7 +18,6 @@ public class Fragment implements Comparable<Fragment> {
 	private String deviceId;
 	private String type;
 	private String unit;
-	private int frequency;
 	private LocalDate date;
 	private long secretKey;
 	private String datasetId;
@@ -30,22 +27,20 @@ public class Fragment implements Comparable<Fragment> {
 
 	}
 
-	public Fragment(String deviceId, String type, String unit, int frequency, LocalDate date) {
+	public Fragment(String deviceId, String type, String unit, LocalDate date) {
 		this.deviceId = deviceId;
 		this.type = type;
 		this.unit = unit;
-		this.frequency = frequency;
 		this.date = date;
 		this.measurements = new LinkedList<Measurement>();
 	}
 	
-	public Fragment(String deviceId, String type, String unit, int frequency, LocalDate date, long secretKey,
+	public Fragment(String deviceId, String type, String unit, LocalDate date, long secretKey,
 			String datasetId) {
 		super();
 		this.deviceId = deviceId;
 		this.type = type;
 		this.unit = unit;
-		this.frequency = frequency;
 		this.date = date;
 		this.secretKey = secretKey;
 		this.datasetId = datasetId;
@@ -125,6 +120,17 @@ public class Fragment implements Comparable<Fragment> {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((date == null) ? 0 : date.hashCode());
+		result = prime * result + ((deviceId == null) ? 0 : deviceId.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		result = prime * result + ((unit == null) ? 0 : unit.hashCode());
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
@@ -142,8 +148,6 @@ public class Fragment implements Comparable<Fragment> {
 			if (other.deviceId != null)
 				return false;
 		} else if (!deviceId.equals(other.deviceId))
-			return false;
-		if (frequency != other.frequency)
 			return false;
 		if (type == null) {
 			if (other.type != null)
@@ -180,14 +184,6 @@ public class Fragment implements Comparable<Fragment> {
 
 	public void setUnit(String unit) {
 		this.unit = unit;
-	}
-
-	public int getFrequency() {
-		return frequency;
-	}
-
-	public void setFrequency(int frequency) {
-		this.frequency = frequency;
 	}
 
 	public LocalDate getDate() {
