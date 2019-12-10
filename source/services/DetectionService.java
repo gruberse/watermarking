@@ -3,237 +3,203 @@ package services;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import entities.DataLeaker;
 import entities.Fragment;
+import entities.Measurement;
+import entities.Request;
+import entities.UsabilityConstraint;
+import utils.DatabaseService;
 import utils.FragmentationService;
+import utils.WatermarkGenerationService;
 
 public class DetectionService {
 
-	/**
-	 * retrieves suspicious fragments from dataset location. detects watermarks for
-	 * data leakage detection. provides a detection report to the report location.
-	 * 
-	 * @param datasetLocation              location of the suspicious dataset
-	 * @param reportLocation               location of the report
-	 * @param fragmentSimilarityThreshold  threshold to determine whether a fragment
-	 *                                     matches another one
-	 * @param watermarkSimilarityThreshold threshold to determine whether a
-	 *                                     watermark matches another one
-	 */
-	public static void getLeakageReport(String datasetLocation, String reportLocation,
-			Double fragmentSimilarityThreshold, Double watermarkSimilarityThreshold) {
-		// provides a detection report
-		provideReport(reportLocation,
-				// detects watermarks for data leakage detection
-				watermarkDetection(datasetLocation, fragmentSimilarityThreshold, watermarkSimilarityThreshold,
-						// retrieve suspicious fragments from file
-						FragmentationService.getFragments(datasetLocation)));
-	}
-
-	/*
-	 * generates file name. writes report to file.
-	 */
-	private static void provideReport(String reportLocation, String report) {
-		// writes report to file
-		//FileService.writeFile(
-				// generates file name
-				//FileService.getFileName(reportLocation, "detection", "Report", ".txt"), report);
-	}
-
-	/*
-	 * detects watermarks for data leakage detection.
-	 */
-	private static String watermarkDetection(String datasetLocation, Double fragmentSimilarityThreshold,
-			Double watermarkSimilarityThreshold, List<Fragment> suspiciousFragments) {
+	public static void getLeakageReport(String datasetName, String reportName, BigDecimal fragmentSimilarityThreshold,
+			BigDecimal watermarkSimilarityThreshold) {
 
 		// print header
 		String report = "watermark detection report";
-		report = report + "\ninvestigated dataset:\t\t\t" + datasetLocation;
-		report = report + "\ndate:\t\t\t\t\t\t\t" + LocalDateTime.now();
+		report = report + "\ninvestigated dataset:\t\t" + datasetName;
+		report = report + "\ndate:\t\t\t\t" + LocalDateTime.now();
 		report = report + "\nfragment similarity threshold:\t" + fragmentSimilarityThreshold;
 		report = report + "\nwatermark similarity threshold:\t" + watermarkSimilarityThreshold;
 		report = report + "\n";
 
-		HashMap<Integer, Integer> detectionSummary = new HashMap<>();
-		Collections.sort(suspiciousFragments);
+		List<Fragment> suspiciousFragments = FragmentationService.getFragments(datasetName);
 
-		// similarity search for each dataset fragment
+		// similarity search for each suspicious fragment
+		Collections.sort(suspiciousFragments);
 		for (int i = 0; i < suspiciousFragments.size(); i++) {
-			report = report + "\n" + (i + 1) + ". suspicious fragment";
+			report = report + "\n[" + (i + 1) + "] suspicious fragment";
 			Fragment suspiciousFragment = suspiciousFragments.get(i);
 			Collections.sort(suspiciousFragment.getMeasurements());
 
 			// print suspicious fragment
-			report = report + "\nsuspicious fragment:\t\t\t" + suspiciousFragment.getDeviceId();
+			report = report + "\nsuspicious fragment:\t\t" + suspiciousFragment.getDeviceId();
 			report = report + "\t" + suspiciousFragment.getType();
 			report = report + "\t" + suspiciousFragment.getUnit();
 			report = report + "\t" + suspiciousFragment.getDate();
 
-			// fragment similarity search
-			Fragment matchingOriginalFragment = new Fragment();
-			Double fragmentSimilarity = 0.0;
-			HashMap<Fragment, Double> matchingOriginalFragments = new HashMap<>();
-			// search for mean first, no date dependent search
-			/*for (Fragment fragment : DatabaseService.getFragments(suspiciousFragment.getDeviceId(),
-					suspiciousFragment.getType(), suspiciousFragment.getUnit(), suspiciousFragment.getDate())) {
+			Fragment matchingFragment = new Fragment();
+			BigDecimal matchingFragmentSimilarity = BigDecimal.valueOf(0.0);
 
-				Collections.sort(fragment.getMeasurements());
-				Double currentFragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment, 1.0);
+			// retrieve original fragments with similar means
+			UsabilityConstraint usabilityConstraint = DatabaseService
+					.getUsabilityConstraint(suspiciousFragment.getType(), suspiciousFragment.getUnit());
+			BigDecimal mean = suspiciousFragment.getMean();
+			List<Fragment> similarMeanFragments = DatabaseService.getFragments(suspiciousFragment.getType(),
+					suspiciousFragment.getUnit(), mean.subtract(usabilityConstraint.getMaximumError()),
+					mean.add(usabilityConstraint.getMaximumError()));
 
-				if (currentFragmentSimilarity >= fragmentSimilarityThreshold) {
-					matchingOriginalFragments.put(fragment, currentFragmentSimilarity);
+			for (Fragment fragment : similarMeanFragments) {
+
+				// fragment similarity search
+				BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment);
+
+				// set highest similarity fragment
+				if (fragmentSimilarity.compareTo(matchingFragmentSimilarity) > 0) {
+					matchingFragmentSimilarity = fragmentSimilarity;
+					matchingFragment = fragment;
 				}
+			}
 
-				if (currentFragmentSimilarity > fragmentSimilarity) {
-					fragmentSimilarity = currentFragmentSimilarity;
-					matchingOriginalFragment = fragment;
-				}
-			}*/
-
-			if (fragmentSimilarity >= fragmentSimilarityThreshold) {
+			if (matchingFragmentSimilarity.compareTo(fragmentSimilarityThreshold) >= 0) {
 
 				// print matching original fragment
-				report = report + "\nmatching original fragment:\t\t" + matchingOriginalFragment.getDeviceId();
-				report = report + "\t" + matchingOriginalFragment.getType();
-				report = report + "\t" + matchingOriginalFragment.getUnit();
-				report = report + "\t" + matchingOriginalFragment.getDate();
-				report = report + "\nmatching fragment similarity:\t" + round(fragmentSimilarity, 2);
+				report = report + "\nmatching original fragment:\t" + matchingFragment.getDeviceId();
+				report = report + "\t" + matchingFragment.getType();
+				report = report + "\t" + matchingFragment.getUnit();
+				report = report + "\t" + matchingFragment.getDate();
+				report = report + "\nmatching fragment similarity:\t" + matchingFragmentSimilarity;
 
 				// extract embedded watermark
-				Double[] noisyWatermark = new Double[suspiciousFragment.getMeasurements().size()];
-				for (int j = 0; j < noisyWatermark.length; j++) {
-					/*noisyWatermark[j] = suspiciousFragment.getMeasurements().get(j).getValue()
-							- matchingOriginalFragment.getMeasurements().get(j).getValue();*/
+				BigDecimal[] noisyWatermark = getWatermark(suspiciousFragment, matchingFragment);
+
+				List<DataLeaker> fragmentLeakers = new LinkedList<>();
+
+				// retrieve requests on matching fragment
+				List<Request> requests = DatabaseService.getRequests(matchingFragment.getDeviceId(),
+						matchingFragment.getType(), matchingFragment.getUnit(), matchingFragment.getDate());
+
+				Fragment prevFragment = DatabaseService.getFragment(matchingFragment.getDeviceId(),
+						matchingFragment.getType(), matchingFragment.getUnit(),
+						matchingFragment.getDate().minusDays(1));
+				Fragment nextFragment = DatabaseService.getFragment(matchingFragment.getDeviceId(),
+						matchingFragment.getType(), matchingFragment.getUnit(), matchingFragment.getDate().plusDays(1));
+
+				// simple watermark //TODO consider combinations
+				for (Request request : requests) {
+					BigDecimal[] watermark = WatermarkGenerationService.generateWatermark_w2(request,
+							usabilityConstraint, matchingFragment, prevFragment, nextFragment);
+
+					// watermark similarity search
+					BigDecimal watermarkSimilarity = getWatermarkSimilarity(noisyWatermark, watermark, usabilityConstraint);
+
+					// add to list if above threshold
+					if (watermarkSimilarity.compareTo(watermarkSimilarityThreshold) >= 0) {
+						List<Integer> dataUserIds = new LinkedList<>();
+						dataUserIds.add(request.getDataUserId());
+						DataLeaker leaker = new DataLeaker(watermarkSimilarity, dataUserIds);
+						fragmentLeakers.add(leaker);
+					}
 				}
-				report = report + "\nextracted noisy watermark:\t\t" + Arrays.toString(noisyWatermark);
 
-				// watermark similarity search
-				Double[] matchingOriginalWatermark = new Double[matchingOriginalFragment.getMeasurements().size()];
-				Double watermarkSimilarity = 0.0;
-				HashMap<Double[], Double> matchingOriginalWatermarks = new HashMap<>();
-				/*for (Double[] watermark : DatabaseService.getWatermarks(matchingOriginalFragment.getDeviceId(),
-						matchingOriginalFragment.getType(), matchingOriginalFragment.getUnit(),
-						matchingOriginalFragment.getDate())) {
-
-					Double currentWatermarkSimilarity = getWatermarkSimilarity(noisyWatermark, watermark, 0.5);
-
-					if (currentWatermarkSimilarity >= watermarkSimilarityThreshold) {
-						matchingOriginalWatermarks.put(watermark, currentWatermarkSimilarity);
+				if (fragmentLeakers.size() > 0) {
+					Collections.sort(fragmentLeakers);
+					report = report + "\nmatching watermarks: ";
+					for (DataLeaker leaker : fragmentLeakers) {
+						report = report + "\n\t\t\t\t" + leaker.toString();
 					}
-
-					if (currentWatermarkSimilarity > watermarkSimilarity) {
-						watermarkSimilarity = currentWatermarkSimilarity;
-						matchingOriginalWatermark = watermark;
-					}
-				}*/
-
-				if (watermarkSimilarity >= watermarkSimilarityThreshold) {
-					// print matching original watermark
-					report = report + "\noriginal matching watermark:\t" + Arrays.toString(matchingOriginalWatermark);
-					report = report + "\nmatching watermark similarity:\t" + round(watermarkSimilarity, 2);
-
-					// detect data leaker
-					int dataLeaker =  0;
-					/*DatabaseService.getDataUserId(matchingOriginalWatermark,
-							matchingOriginalFragment.getDeviceId(), matchingOriginalFragment.getType(),
-							matchingOriginalFragment.getUnit(), matchingOriginalFragment.getDate());*/
-					report = report + "\ndetected data leaker:\t\t\t" + dataLeaker;
-					detectionSummary.put(i + 1, dataLeaker);
-
 				} else {
-					report = report + "\nmatching watermark similarity:\t" + watermarkSimilarity;
-					report = report + "\nno data leaker detected";
-					detectionSummary.put(i + 1, 0);
+					report = report + "\nno matching watermarks detected";
 				}
 
 			} else {
-				report = report + "\nmatching fragment similarity:\t" + fragmentSimilarity;
-				report = report + "\nno data leaker detected";
-				detectionSummary.put(i + 1, 0);
+				report = report + "\nno matching fragment detected";
 			}
 			report = report + "\n";
 		}
+		System.out.println(report);
+	}
+	
+	private static BigDecimal[] getWatermark(Fragment suspiciousFragment, Fragment originalFragment) {
+		BigDecimal[] watermark = new BigDecimal[suspiciousFragment.getMeasurements().size()];
 
-		// print detection summary
-		report = report + "\n\ndetection summary";
-		HashMap<Integer, Integer> leakerSummary = new HashMap<>();
-		for (Map.Entry<Integer, Integer> entry : detectionSummary.entrySet()) {
-			report = report + "\nfragment: " + entry.getKey() + ",\tdetected data leaker: " + entry.getValue();
+		// consider subset and deletion attack
+		for (int i = 0; i < watermark.length; i++) {
+			watermark[i] = suspiciousFragment.getMeasurements().get(i).getValue()
+					.subtract(originalFragment.getMeasurements().get(i).getValue());
+		}
+		return watermark;
+	}
 
-			if (leakerSummary.containsKey(entry.getValue())) {
-				int count = leakerSummary.get(entry.getValue());
-				leakerSummary.replace(entry.getValue(), count, count + 1);
-			} else {
-				leakerSummary.put(entry.getValue(), 1);
+	private static BigDecimal getFragmentSimilarity(Fragment suspiciousFragment, Fragment originalFragment) {
+
+		// suspicious fragment is already sorted
+		Collections.sort(originalFragment.getMeasurements());
+
+		BigDecimal similarity = new BigDecimal("0.0");
+
+		// calculate distances
+		if (suspiciousFragment.getMeasurements().size() == originalFragment.getMeasurements().size()) {
+			for (int i = 0; i < originalFragment.getMeasurements().size(); i++) {
+
+				Measurement suspiciousMeasurement = suspiciousFragment.getMeasurements().get(i);
+				Measurement originalMeasurement = originalFragment.getMeasurements().get(i);
+
+				BigDecimal distance = (suspiciousMeasurement.getValue().subtract(originalMeasurement.getValue())).abs();
+				BigDecimal measurementSimilarity = BigDecimal.valueOf(1)
+						.subtract(distance.divide(originalMeasurement.getValue(), 4, RoundingMode.HALF_UP));
+
+				// sum measurement similarities
+				similarity = similarity.add(measurementSimilarity);
 			}
+
+			// calculate mean similarity
+			similarity = similarity.divide(BigDecimal.valueOf(suspiciousFragment.getMeasurements().size()), 4,
+					RoundingMode.HALF_UP);
+		} else {
+			// deletion & subset
 		}
-
-		// print leaker summary
-		report = report + "\n\nleaker summary";
-		for (Map.Entry<Integer, Integer> entry : leakerSummary.entrySet()) {
-			report = report + "\nleaker: " + entry.getKey() + ",\tabsolute leakage: " + entry.getValue()
-					+ ",\trelative leakage: " + round((double) entry.getValue() / (double) detectionSummary.size(), 2);
-		}
-
-		return report;
-	}
-
-	/*
-	 * get similarity between two fragments considering a distance threshold
-	 */
-	private static Double getFragmentSimilarity(Fragment suspiciousFragment, Fragment originalFragment,
-			double threshold) {
-		Double similarity = 0.0;
-
-		// calculate distances
-		List<Double> distances = new LinkedList<>();
-		double totalDistance = 0.0;
-		for (int i = 0; i < originalFragment.getMeasurements().size(); i++) {
-			double distance = 0.0; //suspiciousFragment.getMeasurements().get(i).getValue() - originalFragment.getMeasurements().get(i).getValue();
-			distances.add(distance);
-			totalDistance = totalDistance + distance;
-		}
-		double meanDistance = Math.abs(totalDistance) / originalFragment.getMeasurements().size();
-
-		// calculate similarity
-		similarity = (threshold - meanDistance) / threshold;
 
 		return similarity;
 	}
 
-	/*
-	 * get similarity between two watermarks considering a distance threshold
-	 */
-	private static Double getWatermarkSimilarity(Double[] suspiciousWatermark, Double[] originalWatermark,
-			double threshold) {
-		Double similarity = 0.0;
+	private static BigDecimal getWatermarkSimilarity(BigDecimal[] suspiciousWatermark, BigDecimal[] originalWatermark,
+			UsabilityConstraint usabilityConstraint) {
+		BigDecimal similarity = new BigDecimal("0.0");
 
 		// calculate distances
-		List<Double> distances = new LinkedList<>();
-		double totalDistance = 0.0;
-		for (int i = 0; i < originalWatermark.length; i++) {
-			double distance = suspiciousWatermark[i] - originalWatermark[i];
-			distances.add(distance);
-			totalDistance = totalDistance + distance;
-		}
-		double meanDistance = Math.abs(totalDistance) / originalWatermark.length;
+		if (suspiciousWatermark.length == originalWatermark.length) {
+			for (int i = 0; i < originalWatermark.length; i++) {
 
-		// calculate similarity
-		similarity = (threshold - meanDistance) / threshold;
+				BigDecimal markSimilarity = new BigDecimal("0.0");
+				BigDecimal distance = (suspiciousWatermark[i].subtract(originalWatermark[i])).abs();
+
+				markSimilarity = BigDecimal.valueOf(1.0)
+						.subtract(distance.divide(usabilityConstraint.getMaximumError(), 4, RoundingMode.HALF_UP));
+
+				// sum measurement similarities
+				similarity = similarity.add(markSimilarity);
+			}
+
+			// calculate mean similarity
+			similarity = similarity.divide(BigDecimal.valueOf(suspiciousWatermark.length), 4, RoundingMode.HALF_UP);
+		} else {
+			// deletion & subset
+		}
 
 		return similarity;
 	}
 
-	/*
-	 * rounds a double value based on a given number of places
-	 */
-	public static double round(double value, int places) {
-		return BigDecimal.valueOf(value).setScale(places, RoundingMode.HALF_UP).doubleValue();
-	}
 }

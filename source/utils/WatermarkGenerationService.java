@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import entities.Bin;
+import entities.Range;
 import entities.DataProfile;
 import entities.Fragment;
 import entities.Measurement;
@@ -27,17 +27,10 @@ public class WatermarkGenerationService {
 
 			Measurement measurement = fragment.getMeasurements().get(i);
 
-			// compute probabilities for each value range based on distributions
-			// (...) - 1 skips last invalid range
-			// numberOfRanges = (maximumError * 2 / valueBinSize) - 1
-			// = 1 less than specified by usability constraint
-			int numberOfRanges = (usabilityConstraint.getMaximumError().multiply(new BigDecimal(2))
-					.divide(dataProfile.getValueBinSize())).subtract(new BigDecimal(1)).intValue();
-
 			// final probabilities of value range
-			List<Bin<BigDecimal>> valueRange = new LinkedList<Bin<BigDecimal>>();
+			List<Range<BigDecimal>> valueRange = new LinkedList<Range<BigDecimal>>();
 			// intermediate probabilities
-			BigDecimal[][] rangeProbabilities = new BigDecimal[numberOfRanges][6];
+			BigDecimal[][] rangeProbabilities = new BigDecimal[usabilityConstraint.getNumberOfRanges() - 1][6];
 			// sums to calculate final probability
 			BigDecimal valueSum = new BigDecimal("0.0");
 			BigDecimal slopeSum_1 = new BigDecimal("0.0");
@@ -45,21 +38,26 @@ public class WatermarkGenerationService {
 			BigDecimal curvatureSum_1 = new BigDecimal("0.0");
 			BigDecimal curvatureSum_2 = new BigDecimal("0.0");
 			BigDecimal curvatureSum_3 = new BigDecimal("0.0");
+			
+			BigDecimal valueRangeSize = BigDecimal.valueOf(0.1);
+					//usabilityConstraint.getMaximumError().multiply(new BigDecimal(2))
+					//.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges()));
 
-			for (int k = 0; k < numberOfRanges; k++) {
+			// skip last invalid range --> k + 1
+			for (int k = 0; k + 1 < usabilityConstraint.getNumberOfRanges(); k++) {
 
 				// compute range k [minimum, maximum)
 				// (k + 1) skips first invalid range
-				// minimum = (round(value(t), down) - maximumError) + ((k + 1) * valueBinSize)
+				// minimum = (round(value(t), down) - maximumError) + ((k + 1) * valueRangeSize)
 				BigDecimal valueMinimum = (measurement.getValue()
-						.setScale(dataProfile.getValueBinSize().scale(), RoundingMode.DOWN)
+						.setScale(valueRangeSize.scale(), RoundingMode.DOWN)
 						.subtract(usabilityConstraint.getMaximumError()))
-								.add(new BigDecimal(k + 1).multiply(dataProfile.getValueBinSize()));
-				// maximum = (round(value(t), up) - maximumError) + ((k + 1) * valueBinSize)
+								.add(new BigDecimal(k + 1).multiply(valueRangeSize));
+				// maximum = (round(value(t), up) - maximumError) + ((k + 1) * valueRangeSize)
 				BigDecimal valueMaximum = (measurement.getValue()
-						.setScale(dataProfile.getValueBinSize().scale(), RoundingMode.UP)
+						.setScale(valueRangeSize.scale(), RoundingMode.UP)
 						.subtract(usabilityConstraint.getMaximumError()))
-								.add(new BigDecimal(k + 1).multiply(dataProfile.getValueBinSize()));
+								.add(new BigDecimal(k + 1).multiply(valueRangeSize));
 
 				// check valid minimum value range
 				if (valueMinimum.compareTo(usabilityConstraint.getMinimumValue()) <= 0) {
@@ -71,12 +69,12 @@ public class WatermarkGenerationService {
 				}
 
 				// initialize ranges with total relative probabilities
-				valueRange.add(new Bin<BigDecimal>(valueMinimum, valueMaximum, new BigDecimal("0.0")));
+				valueRange.add(new Range<BigDecimal>(valueMinimum, valueMaximum, new BigDecimal("0.0")));
 
 				// compute probability for value v(t) in range k
 				BigDecimal valueProbability = new BigDecimal("0.0");
-				for (Bin<BigDecimal> bin : dataProfile.getRelativeValueDistributionBins(valueMinimum, valueMaximum)) {
-					valueProbability = valueProbability.add(bin.getValue());
+				for (Range<BigDecimal> range : dataProfile.getRelativeValueDistributionRanges(valueMinimum, valueMaximum)) {
+					valueProbability = valueProbability.add(range.getValue());
 				}
 
 				// compute slope_1(t-1,t) probability in range k
@@ -86,9 +84,9 @@ public class WatermarkGenerationService {
 					BigDecimal slopeMinimum_1 = valueMinimum.subtract(fragment.getMeasurements().get(i - 1).getValue());
 					BigDecimal slopeMaximum_1 = valueMaximum.subtract(fragment.getMeasurements().get(i - 1).getValue());
 
-					for (Bin<BigDecimal> bin : dataProfile.getRelativeSlopeDistributionBins(slopeMinimum_1,
+					for (Range<BigDecimal> range : dataProfile.getRelativeSlopeDistributionRanges(slopeMinimum_1,
 							slopeMaximum_1)) {
-						slopeProbability_1 = slopeProbability_1.add(bin.getValue());
+						slopeProbability_1 = slopeProbability_1.add(range.getValue());
 					}
 				}
 
@@ -99,9 +97,9 @@ public class WatermarkGenerationService {
 					BigDecimal slopeMinimum_2 = fragment.getMeasurements().get(i + 1).getValue().subtract(valueMaximum);
 					BigDecimal slopeMaximum_2 = fragment.getMeasurements().get(i + 1).getValue().subtract(valueMinimum);
 
-					for (Bin<BigDecimal> bin : dataProfile.getRelativeSlopeDistributionBins(slopeMinimum_2,
+					for (Range<BigDecimal> range : dataProfile.getRelativeSlopeDistributionRanges(slopeMinimum_2,
 							slopeMaximum_2)) {
-						slopeProbability_2 = slopeProbability_2.add(bin.getValue());
+						slopeProbability_2 = slopeProbability_2.add(range.getValue());
 					}
 				}
 
@@ -118,9 +116,9 @@ public class WatermarkGenerationService {
 									.subtract(fragment.getMeasurements().get(i - 1).getValue()
 											.subtract(fragment.getMeasurements().get(i - 2).getValue()));
 
-					for (Bin<BigDecimal> bin : dataProfile.getRelativeCurvatureDistributionBins(curvatureMinimum_1,
+					for (Range<BigDecimal> range : dataProfile.getRelativeCurvatureDistributionRanges(curvatureMinimum_1,
 							curvatureMaximum_1)) {
-						curvatureProbability_1 = curvatureProbability_1.add(bin.getValue());
+						curvatureProbability_1 = curvatureProbability_1.add(range.getValue());
 					}
 				}
 
@@ -135,9 +133,9 @@ public class WatermarkGenerationService {
 							.subtract(valueMinimum))
 									.subtract(valueMinimum.subtract(fragment.getMeasurements().get(i - 1).getValue()));
 
-					for (Bin<BigDecimal> bin : dataProfile.getRelativeCurvatureDistributionBins(curvatureMinimum_2,
+					for (Range<BigDecimal> range : dataProfile.getRelativeCurvatureDistributionRanges(curvatureMinimum_2,
 							curvatureMaximum_2)) {
-						curvatureProbability_2 = curvatureProbability_2.add(bin.getValue());
+						curvatureProbability_2 = curvatureProbability_2.add(range.getValue());
 					}
 				}
 
@@ -152,9 +150,9 @@ public class WatermarkGenerationService {
 							.subtract(fragment.getMeasurements().get(i + 1).getValue()))
 									.subtract(fragment.getMeasurements().get(i + 1).getValue().subtract(valueMaximum));
 
-					for (Bin<BigDecimal> bin : dataProfile.getRelativeCurvatureDistributionBins(curvatureMinimum_3,
+					for (Range<BigDecimal> range : dataProfile.getRelativeCurvatureDistributionRanges(curvatureMinimum_3,
 							curvatureMaximum_3)) {
-						curvatureProbability_3 = curvatureProbability_3.add(bin.getValue());
+						curvatureProbability_3 = curvatureProbability_3.add(range.getValue());
 					}
 				}
 
@@ -235,16 +233,16 @@ public class WatermarkGenerationService {
 								.add(relativeCurvatureProbability_2).add(relativeCurvatureProbability_3))
 										.divide(new BigDecimal("6"), 2, RoundingMode.HALF_UP));
 			}
-
+			
 			// select value range
-			Bin<BigDecimal> selectedValueRange = new Bin<BigDecimal>(BigDecimal.valueOf(0), BigDecimal.valueOf(0));
+			Range<BigDecimal> selectedValueRange = new Range<BigDecimal>(BigDecimal.valueOf(0), BigDecimal.valueOf(0));
 			BigDecimal randomNumber = BigDecimal.valueOf(prng.nextDouble()).setScale(2, RoundingMode.DOWN);
 			BigDecimal actualValueRange = new BigDecimal("0.0");
 			for (int k = 0; k < valueRange.size(); k++) {
-				Bin<BigDecimal> bin = valueRange.get(k);
-				actualValueRange = actualValueRange.add(bin.getValue());
+				Range<BigDecimal> range = valueRange.get(k);
+				actualValueRange = actualValueRange.add(range.getValue());
 				if (randomNumber.compareTo(actualValueRange) <= 0) {
-					selectedValueRange = new Bin<BigDecimal>(bin.getMinimum(), bin.getMaximum());
+					selectedValueRange = new Range<BigDecimal>(range.getMinimum(), range.getMaximum());
 					break;
 				}
 			}
@@ -410,17 +408,17 @@ public class WatermarkGenerationService {
 			}
 
 			// total probabilities
-			List<Bin<BigDecimal>> rangeProbabilities = new LinkedList<Bin<BigDecimal>>();
+			List<Range<BigDecimal>> rangeProbabilities = new LinkedList<Range<BigDecimal>>();
 
 			// compute range sizes
-			BigDecimal lowerValueRangeSize = measurement.getValue().subtract(lowerBound);
-			BigDecimal upperValueRangeSize = upperBound.subtract(measurement.getValue());
+			BigDecimal totalLowerValueRangeSize = measurement.getValue().subtract(lowerBound);
+			BigDecimal totalUpperValueRangeSize = upperBound.subtract(measurement.getValue());
 
-			// compute bin sizes
-			BigDecimal lowerBinSize = lowerValueRangeSize
-					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2));
-			BigDecimal upperBinSize = upperValueRangeSize
-					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2));
+			// compute range sizes
+			BigDecimal lowerRangeSize = totalLowerValueRangeSize
+					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2), 15, RoundingMode.DOWN);
+			BigDecimal upperRangeSize = totalUpperValueRangeSize
+					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2), 15, RoundingMode.DOWN);
 
 			// create ranges of upper and lower together
 			// probability of 5 ranges per direction: 25%, 12.5%, 6.25%, 3.125%, 3.125%
@@ -431,30 +429,30 @@ public class WatermarkGenerationService {
 					currentProbability = currentProbability.divide(BigDecimal.valueOf(2.0));
 				}
 
-				BigDecimal lowerBinMinimum = measurement.getValue()
-						.subtract(lowerBinSize.multiply(BigDecimal.valueOf(k + 1)));
-				BigDecimal lowerBinMaximum = measurement.getValue()
-						.subtract(lowerBinSize.multiply(BigDecimal.valueOf(k)));
-				BigDecimal lowerBinProbability = currentProbability;
-				rangeProbabilities.add(new Bin<BigDecimal>(lowerBinMinimum, lowerBinMaximum, lowerBinProbability));
+				BigDecimal lowerRangeMinimum = measurement.getValue()
+						.subtract(lowerRangeSize.multiply(BigDecimal.valueOf(k + 1)));
+				BigDecimal lowerRangeMaximum = measurement.getValue()
+						.subtract(lowerRangeSize.multiply(BigDecimal.valueOf(k)));
+				BigDecimal lowerRangeProbability = currentProbability;
+				rangeProbabilities.add(new Range<BigDecimal>(lowerRangeMinimum, lowerRangeMaximum, lowerRangeProbability));
 
-				BigDecimal upperBinMinimum = measurement.getValue().add(upperBinSize.multiply(BigDecimal.valueOf(k)));
-				BigDecimal upperBinMaximum = measurement.getValue()
-						.add(upperBinSize.multiply(BigDecimal.valueOf(k + 1)));
-				BigDecimal upperBinProbability = currentProbability;
-				rangeProbabilities.add(new Bin<BigDecimal>(upperBinMinimum, upperBinMaximum, upperBinProbability));
+				BigDecimal upperRangeMinimum = measurement.getValue().add(upperRangeSize.multiply(BigDecimal.valueOf(k)));
+				BigDecimal upperRangeMaximum = measurement.getValue()
+						.add(upperRangeSize.multiply(BigDecimal.valueOf(k + 1)));
+				BigDecimal upperRangeProbability = currentProbability;
+				rangeProbabilities.add(new Range<BigDecimal>(upperRangeMinimum, upperRangeMaximum, upperRangeProbability));
 			}
 			Collections.sort(rangeProbabilities);
 
 			// select range
-			Bin<BigDecimal> selectedValueRange = new Bin<BigDecimal>(BigDecimal.valueOf(0), BigDecimal.valueOf(0));
+			Range<BigDecimal> selectedValueRange = new Range<BigDecimal>(BigDecimal.valueOf(0), BigDecimal.valueOf(0));
 			BigDecimal randomNumber4RangeSelection = BigDecimal.valueOf(prng.nextDouble());
 			BigDecimal currentValue = BigDecimal.valueOf(0.0);
 			for (int k = 0; k < rangeProbabilities.size(); k++) {
-				Bin<BigDecimal> bin = rangeProbabilities.get(k);
-				currentValue = currentValue.add(bin.getValue());
+				Range<BigDecimal> range = rangeProbabilities.get(k);
+				currentValue = currentValue.add(range.getValue());
 				if (randomNumber4RangeSelection.compareTo(currentValue) <= 0) {
-					selectedValueRange = bin;
+					selectedValueRange = range;
 					break;
 				}
 			}

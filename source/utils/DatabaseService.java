@@ -1,5 +1,6 @@
 package utils;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -178,6 +179,39 @@ public class DatabaseService {
 		}
 		return fragments;
 	}
+	
+	public static List<Fragment> getFragments(String type, String unit, BigDecimal minMean, BigDecimal maxMean) {
+		List<Fragment> fragments = new LinkedList<>();
+
+		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
+				"postgres", "admin")) {
+
+			String sql = "SELECT * FROM fragment "
+					+ "WHERE type = ? AND unit = ? AND mean BETWEEN ? AND ?";
+
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, type);
+			preparedStatement.setString(2, unit);
+			preparedStatement.setBigDecimal(3, minMean);
+			preparedStatement.setBigDecimal(4, maxMean);
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			while (resultSet.next()) {
+				Fragment fragment = new Fragment(resultSet.getString("device_id"), type, unit,
+						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"),
+						resultSet.getString("dataset_id"));
+				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
+				fragments.add(fragment);
+			}
+
+			resultSet.close();
+			preparedStatement.close();
+			connection.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return fragments;
+	}
 
 	public static List<Fragment> getFragments(int noOfDevices, String type, String unit, LocalDate from,
 			LocalDate to) {
@@ -217,9 +251,8 @@ public class DatabaseService {
 				"postgres", "admin")) {
 
 			String sql = "INSERT INTO data_profile (dataset_id, device_id, type, unit, "
-					+ "value_bin_size, slope_bin_size, curvature_bin_size, "
 					+ "relative_value_distribution, relative_slope_distribution, relative_curvature_distribution) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			for (DataProfile dataProfile : dataProfiles) {
@@ -227,14 +260,11 @@ public class DatabaseService {
 				preparedStatement.setString(2, dataProfile.getDeviceId());
 				preparedStatement.setString(3, dataProfile.getType());
 				preparedStatement.setString(4, dataProfile.getUnit());
-				preparedStatement.setBigDecimal(5, dataProfile.getValueBinSize());
-				preparedStatement.setBigDecimal(6, dataProfile.getSlopeBinSize());
-				preparedStatement.setBigDecimal(7, dataProfile.getCurvatureBinSize());
-				preparedStatement.setArray(8,
+				preparedStatement.setArray(5,
 						connection.createArrayOf("text", dataProfile.getRelativeValueDistributionAsStringArray()));
-				preparedStatement.setArray(9,
+				preparedStatement.setArray(6,
 						connection.createArrayOf("text", dataProfile.getRelativeSlopeDistributionAsStringArray()));
-				preparedStatement.setArray(10,
+				preparedStatement.setArray(7,
 						connection.createArrayOf("text", dataProfile.getRelativeCurvatureDistributionAsStringArray()));
 				preparedStatement.executeUpdate();
 			}
@@ -250,8 +280,8 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT value_bin_size, slope_bin_size, curvature_bin_size, "
-					+ "relative_value_distribution, relative_slope_distribution, relative_curvature_distribution FROM data_profile "
+			String sql = "SELECT relative_value_distribution, relative_slope_distribution, relative_curvature_distribution "
+					+ "FROM data_profile "
 					+ "WHERE dataset_id = ? AND device_id = ? AND type = ? AND unit = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -263,9 +293,6 @@ public class DatabaseService {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			if (resultSet.next()) {
 				DataProfile dataProfile = new DataProfile(datasetId, deviceId, type, unit);
-				dataProfile.setValueBinSize(resultSet.getBigDecimal("value_bin_size"));
-				dataProfile.setSlopeBinSize(resultSet.getBigDecimal("slope_bin_size"));
-				dataProfile.setCurvatureBinSize(resultSet.getBigDecimal("curvature_bin_size"));
 				dataProfile.setRelativeValueDistributionFromStringArray(
 						(String[]) resultSet.getArray("relative_value_distribution").getArray());
 				dataProfile.setRelativeSlopeDistributionFromStringArray(
@@ -343,13 +370,47 @@ public class DatabaseService {
 		return null;
 	}
 
+	public static List<Request> getRequests(String deviceId, String type, String unit, LocalDate date) {
+		List<Request> requests = new LinkedList<>();
+		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
+				"postgres", "admin")) {
+
+			String sql = "SELECT data_user_id, number_of_watermark, timestamps FROM request "
+					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
+
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, deviceId);
+			preparedStatement.setString(2, type);
+			preparedStatement.setString(3, unit);
+			preparedStatement.setDate(4, Date.valueOf(date));
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			while (resultSet.next()) {
+				Timestamp[] timestampArray = (Timestamp[]) resultSet.getArray("timestamps").getArray();
+				ArrayList<LocalDateTime> timestamps = new ArrayList<LocalDateTime>();
+				for (int i = 0; i < timestampArray.length; i++) {
+					timestamps.add(timestampArray[i].toLocalDateTime());
+				}
+				requests.add(new Request(deviceId, resultSet.getInt("data_user_id"), type, unit, date,
+						resultSet.getInt("number_of_watermark"), timestamps));
+			}
+
+			resultSet.close();
+			preparedStatement.close();
+			connection.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return requests;
+	}
+	
 	public static void updateRequest(Request request) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
 			String sql = "UPDATE request SET timestamps = ? WHERE device_id = ? AND data_user_id = ? AND type = ? "
-					+ "AND unit = ? AND AND date = ? AND number_of_watermark = ?";
-
+					+ "AND unit = ? AND date = ?";
+			
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setArray(1, connection.createArrayOf("timestamp", request.getTimestamps().toArray()));
 			preparedStatement.setString(2, request.getDeviceId());
@@ -357,7 +418,6 @@ public class DatabaseService {
 			preparedStatement.setString(4, request.getType());
 			preparedStatement.setString(5, request.getUnit());
 			preparedStatement.setDate(6, Date.valueOf(request.getDate()));
-			preparedStatement.setInt(7, request.getNumberOfWatermark());
 			preparedStatement.executeUpdate();
 
 			preparedStatement.close();

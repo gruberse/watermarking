@@ -24,6 +24,12 @@ public class Request {
 		this.numberOfWatermark = numberOfWatermark;
 		this.timestamps = timestamps;
 	}
+	
+	@Override
+	public String toString() {
+		return "Request [deviceId=" + deviceId + ", dataUserId=" + dataUserId + ", type=" + type + ", unit=" + unit
+				+ ", date=" + date + ", numberOfWatermark=" + numberOfWatermark + ", timestamps=" + timestamps + "]";
+	}
 
 	public String getDeviceId() {
 		return deviceId;

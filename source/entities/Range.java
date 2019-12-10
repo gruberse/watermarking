@@ -2,19 +2,19 @@ package entities;
 
 import java.math.BigDecimal;
 
-public class Bin<T> implements Comparable<Bin<T>> {
+public class Range<T> implements Comparable<Range<T>> {
 
 	private BigDecimal minimum;
 	private BigDecimal maximum;
 	private T value;
 	
-	public Bin(BigDecimal minimum, BigDecimal maximum) {
+	public Range(BigDecimal minimum, BigDecimal maximum) {
 		super();
 		this.minimum = minimum;
 		this.maximum = maximum;
 	}
 	
-	public Bin(BigDecimal minimum, BigDecimal maximum, T value) {
+	public Range(BigDecimal minimum, BigDecimal maximum, T value) {
 		super();
 		this.minimum = minimum;
 		this.maximum = maximum;
@@ -22,7 +22,7 @@ public class Bin<T> implements Comparable<Bin<T>> {
 	}
 	
 	@Override
-	public int compareTo(Bin<T> o) {
+	public int compareTo(Range<T> o) {
 		if (getMinimum() == null || o.getMinimum() == null) {
 			return 0;
 		}
@@ -42,7 +42,7 @@ public class Bin<T> implements Comparable<Bin<T>> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Bin other = (Bin) obj;
+		Range other = (Range) obj;
 		if (maximum == null) {
 			if (other.maximum != null)
 				return false;
