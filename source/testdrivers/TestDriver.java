@@ -22,10 +22,12 @@ public class TestDriver {
 
 		//ContainerService.uploadDataset("files/testdata.json");
 		
-		//DataService.getDataset(2, "files/request1.json", 1, "DexG5MobRec_SM64305440", "cbg", "mmol/L", LocalDate.of(2017, 2, 4),LocalDate.of(2017, 2, 4));
+		//DataService.getDataset(2, "files/request.json", 1, "DexG5MobRec_SM64305440", "cbg", "mmol/L", LocalDate.of(2017, 2, 4),LocalDate.of(2017, 2, 4));
 		//DataService.getDataset(2, "files/request2.json", 1, 100, "cbg", "mmol/L", LocalDate.of(2015, 12, 30), LocalDate.of(2016, 8, 7));
 
-		DetectionService.getLeakageReport("files/request1.json", "files/report1.txt", BigDecimal.valueOf(0.8), BigDecimal.valueOf(0.8));
+		DetectionService.getLeakageReport("files/request.json", "files/report.txt", BigDecimal.valueOf(0.8), BigDecimal.valueOf(0.8));
+		DetectionService.getLeakageReport("files/deletion.json", "files/report.txt", BigDecimal.valueOf(0.8), BigDecimal.valueOf(0.8));
+		DetectionService.getLeakageReport("files/subset.json", "files/report.txt", BigDecimal.valueOf(0.8), BigDecimal.valueOf(0.8));
 	}
 
 }

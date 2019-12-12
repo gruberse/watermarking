@@ -91,8 +91,8 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "INSERT INTO fragment (device_id, type, unit, date, measurements, secret_key, mean, dataset_id) "
-					+ "VALUES (?, ?, ?, ?, ?::JSON, ?, ?, ?)";
+			String sql = "INSERT INTO fragment (device_id, type, unit, date, measurements, secret_key, dataset_id) "
+					+ "VALUES (?, ?, ?, ?, ?::JSON, ?, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			for (Fragment fragment : fragments) {
@@ -102,7 +102,6 @@ public class DatabaseService {
 				preparedStatement.setDate(4, Date.valueOf(fragment.getDate()));
 				preparedStatement.setObject(5, fragment.getMeasurementsAsJsonArrayString());
 				preparedStatement.setLong(6, fragment.getSecretKey());
-				preparedStatement.setBigDecimal(7, fragment.getMean());
 				preparedStatement.setString(8, fragment.getDatasetId());
 				preparedStatement.executeUpdate();
 			}
@@ -118,7 +117,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT date, measurements, secret_key, mean, dataset_id FROM fragment "
+			String sql = "SELECT date, measurements, secret_key, dataset_id FROM fragment "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -180,20 +179,17 @@ public class DatabaseService {
 		return fragments;
 	}
 	
-	public static List<Fragment> getFragments(String type, String unit, BigDecimal minMean, BigDecimal maxMean) {
+	public static List<Fragment> getFragments(String type, String unit) {
 		List<Fragment> fragments = new LinkedList<>();
 
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT * FROM fragment "
-					+ "WHERE type = ? AND unit = ? AND mean BETWEEN ? AND ?";
+			String sql = "SELECT * FROM fragment WHERE type = ? AND unit = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, unit);
-			preparedStatement.setBigDecimal(3, minMean);
-			preparedStatement.setBigDecimal(4, maxMean);
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {

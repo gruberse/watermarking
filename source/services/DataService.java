@@ -20,22 +20,14 @@ public class DataService {
 
 	public static void getDataset(int method, String fileName, int dataUserId, String deviceId, String type,
 			String unit, LocalDate from, LocalDate to) {
-		// provide watermarked dataset
 		provideDataset(fileName,
-				// watermark fragments
-				watermarkEmbedding(method, dataUserId,
-						// retrieve fragments
-						DatabaseService.getFragments(deviceId, type, unit, from, to)));
+				watermarkEmbedding(method, dataUserId, DatabaseService.getFragments(deviceId, type, unit, from, to)));
 	}
 
 	public static void getDataset(int method, String fileName, int dataUserId, int noOfDevices, String type,
 			String unit, LocalDate from, LocalDate to) {
-		// provide dataset
-		provideDataset(fileName,
-				// watermark fragments
-				watermarkEmbedding(method, dataUserId,
-						// retrieve fragments
-						DatabaseService.getFragments(noOfDevices, type, unit, from, to)));
+		provideDataset(fileName, watermarkEmbedding(method, dataUserId,
+				DatabaseService.getFragments(noOfDevices, type, unit, from, to)));
 	}
 
 	private static void provideDataset(String fileName, List<Fragment> fragments) {
@@ -118,8 +110,8 @@ public class DataService {
 				BigDecimal originalValue = fragment.getMeasurements().get(j).getValue();
 				BigDecimal watermarkedValue = originalValue.add(watermark[j]);
 				fragment.getMeasurements().get(j).setValue(watermarkedValue);
-				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
-				//","));
+				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
+				// ","));
 			}
 			// update watermarked fragment
 			fragments.set(i, fragment);
