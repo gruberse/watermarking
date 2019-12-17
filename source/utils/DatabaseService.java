@@ -102,7 +102,7 @@ public class DatabaseService {
 				preparedStatement.setDate(4, Date.valueOf(fragment.getDate()));
 				preparedStatement.setObject(5, fragment.getMeasurementsAsJsonArrayString());
 				preparedStatement.setLong(6, fragment.getSecretKey());
-				preparedStatement.setString(8, fragment.getDatasetId());
+				preparedStatement.setString(7, fragment.getDatasetId());
 				preparedStatement.executeUpdate();
 			}
 
@@ -151,7 +151,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT date, measurements, secret_key, mean, dataset_id FROM fragment "
+			String sql = "SELECT date, measurements, secret_key, dataset_id FROM fragment "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date BETWEEN ? AND ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -160,6 +160,38 @@ public class DatabaseService {
 			preparedStatement.setString(3, unit);
 			preparedStatement.setDate(4, Date.valueOf(from));
 			preparedStatement.setDate(5, Date.valueOf(to));
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+			while (resultSet.next()) {
+				Fragment fragment = new Fragment(deviceId, type, unit,
+						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"),
+						resultSet.getString("dataset_id"));
+				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
+				fragments.add(fragment);
+			}
+
+			resultSet.close();
+			preparedStatement.close();
+			connection.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return fragments;
+	}
+	
+	public static List<Fragment> getFragments(String deviceId, String type, String unit) {
+		List<Fragment> fragments = new LinkedList<>();
+
+		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
+				"postgres", "admin")) {
+
+			String sql = "SELECT date, measurements, secret_key, dataset_id, date FROM fragment "
+					+ "WHERE device_id = ? AND type = ? AND unit = ?";
+
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, deviceId);
+			preparedStatement.setString(2, type);
+			preparedStatement.setString(3, unit);
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {
@@ -209,26 +241,23 @@ public class DatabaseService {
 		return fragments;
 	}
 
-	public static List<Fragment> getFragments(int noOfDevices, String type, String unit, LocalDate from,
-			LocalDate to) {
+	public static List<Fragment> getFragments(int noOfDevices, String type, String unit) {
 		List<Fragment> fragments = new LinkedList<>();
 
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
 			String sql = "SELECT distinct device_id FROM fragment "
-					+ "WHERE type = ? AND unit = ? AND date BETWEEN ? AND ?";
+					+ "WHERE type = ? AND unit = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, unit);
-			preparedStatement.setDate(3, Date.valueOf(from));
-			preparedStatement.setDate(4, Date.valueOf(to));
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			int counter = 0;
 			while (resultSet.next() && counter < noOfDevices) {
-				fragments.addAll(getFragments(resultSet.getString("device_id"), type, unit, from, to));
+				fragments.addAll(getFragments(resultSet.getString("device_id"), type, unit));
 				counter = counter + 1;
 			}
 

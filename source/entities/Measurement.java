@@ -14,7 +14,7 @@ public class Measurement implements Comparable<Measurement> {
 	public Measurement() {
 		
 	}
-
+	
 	public Measurement(String deviceId, String type, String unit, LocalDateTime time, BigDecimal value) {
 		super();
 		this.deviceId = deviceId;

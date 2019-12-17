@@ -42,7 +42,7 @@ public class Range<T> implements Comparable<Range<T>> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Range other = (Range) obj;
+		Range<?> other = (Range<?>) obj;
 		if (maximum == null) {
 			if (other.maximum != null)
 				return false;

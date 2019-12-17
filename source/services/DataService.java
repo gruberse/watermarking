@@ -1,7 +1,5 @@
 package services;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,36 +12,21 @@ import entities.Fragment;
 import entities.Request;
 import entities.UsabilityConstraint;
 import utils.DatabaseService;
+import utils.FileService;
 import utils.WatermarkGenerationService;
 
 public class DataService {
 
 	public static void getDataset(int method, String fileName, int dataUserId, String deviceId, String type,
 			String unit, LocalDate from, LocalDate to) {
-		provideDataset(fileName,
+		FileService.writeDataset(fileName,
 				watermarkEmbedding(method, dataUserId, DatabaseService.getFragments(deviceId, type, unit, from, to)));
 	}
 
 	public static void getDataset(int method, String fileName, int dataUserId, int noOfDevices, String type,
-			String unit, LocalDate from, LocalDate to) {
-		provideDataset(fileName, watermarkEmbedding(method, dataUserId,
-				DatabaseService.getFragments(noOfDevices, type, unit, from, to)));
-	}
-
-	private static void provideDataset(String fileName, List<Fragment> fragments) {
-		String jsonString = "[";
-		for (int i = 0; i < fragments.size(); i++) {
-			jsonString = jsonString + fragments.get(i).getMeasurementsAsJsonString();
-			if (i + 1 < fragments.size())
-				jsonString = jsonString + ",";
-		}
-		jsonString = jsonString + "\n]";
-
-		try (FileWriter file = new FileWriter(fileName)) {
-			file.write(jsonString);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
+			String unit) {
+		FileService.writeDataset(fileName, watermarkEmbedding(method, dataUserId,
+				DatabaseService.getFragments(noOfDevices, type, unit)));
 	}
 
 	private static List<Fragment> watermarkEmbedding(int method, int dataUserId, List<Fragment> fragments) {
