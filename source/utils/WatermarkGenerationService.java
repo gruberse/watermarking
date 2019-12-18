@@ -271,40 +271,24 @@ public class WatermarkGenerationService {
 			Measurement measurement = fragment.getMeasurements().get(i);
 			Measurement prevMeasurement = new Measurement();
 			Measurement nextMeasurement = new Measurement();
-
-			// previous and next measurement exist in fragment
-			if (i > 0 && i + 1 < fragment.getMeasurements().size()) {
-				prevMeasurement = fragment.getMeasurements().get(i - 1);
-				nextMeasurement = fragment.getMeasurements().get(i + 1);
-			}
-
-			// previous measurement is missing
-			else if (i == 0 && i + 1 < fragment.getMeasurements().size()) {
-				if (prevFragment == null) {
-					prevMeasurement.setValue(measurement.getValue());
-				} else {
-					prevMeasurement = prevFragment.getMeasurements().get(prevFragment.getMeasurements().size() - 1);
-				}
-				nextMeasurement = fragment.getMeasurements().get(i + 1);
-			}
-
-			// next measurement is missing
-			else if (i > 0 && i + 1 == fragment.getMeasurements().size()) {
-				if (nextFragment == null) {
-					nextMeasurement.setValue(measurement.getValue());
-				} else {
-					nextMeasurement = nextFragment.getMeasurements().get(0);
-				}
+			
+			// set previous measurement
+			if(i > 0) {
 				prevMeasurement = fragment.getMeasurements().get(i - 1);
 			}
-
-			// both measurements are missing
 			else {
 				if (prevFragment == null) {
 					prevMeasurement.setValue(measurement.getValue());
 				} else {
 					prevMeasurement = prevFragment.getMeasurements().get(prevFragment.getMeasurements().size() - 1);
 				}
+			}
+			
+			// set next measurement
+			if(i + 1 < fragment.getMeasurements().size()) {
+				nextMeasurement = fragment.getMeasurements().get(i + 1);
+			}
+			else {
 				if (nextFragment == null) {
 					nextMeasurement.setValue(measurement.getValue());
 				} else {
