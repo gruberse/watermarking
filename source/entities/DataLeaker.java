@@ -1,24 +1,23 @@
 package entities;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public class DataLeaker implements Comparable<DataLeaker> {
 
 	private BigDecimal probability;
-	private List<Integer> dataUserIds;
+	private Integer dataUserId;
 	
 	public DataLeaker() {
 	}
 
-	public DataLeaker(BigDecimal probability, List<Integer> dataUserIds) {
+	public DataLeaker(BigDecimal probability, Integer dataUserId) {
 		this.probability = probability;
-		this.dataUserIds = dataUserIds;
+		this.dataUserId = dataUserId;
 	}
 	
 	@Override
 	public String toString() {
-		return "probability: " + probability + ", data user: " + dataUserIds;
+		return "data user: " + dataUserId + ", probability: " + probability;
 	}
 	
 	@Override
@@ -38,10 +37,10 @@ public class DataLeaker implements Comparable<DataLeaker> {
 		if (getClass() != obj.getClass())
 			return false;
 		DataLeaker other = (DataLeaker) obj;
-		if (dataUserIds == null) {
-			if (other.dataUserIds != null)
+		if (dataUserId == null) {
+			if (other.dataUserId != null)
 				return false;
-		} else if (!dataUserIds.equals(other.dataUserIds))
+		} else if (!dataUserId.equals(other.dataUserId))
 			return false;
 		return true;
 	}
@@ -54,12 +53,12 @@ public class DataLeaker implements Comparable<DataLeaker> {
 		this.probability = probability;
 	}
 
-	public List<Integer> getDataUserIds() {
-		return dataUserIds;
+	public Integer getDataUserId() {
+		return dataUserId;
 	}
 
-	public void setDataUserIds(List<Integer> dataUserIds) {
-		this.dataUserIds = dataUserIds;
+	public void setDataUserId(Integer dataUserId) {
+		this.dataUserId = dataUserId;
 	}
 
 }

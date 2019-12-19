@@ -23,12 +23,12 @@ import utils.WatermarkGenerationService;
 
 public class DetectionService {
 
-	public static void getLeakageReport(String datasetName, String reportName, BigDecimal fragmentSimilarityThreshold,
+	public static void getReport(String datasetName, String reportName, BigDecimal fragmentSimilarityThreshold,
 			BigDecimal watermarkSimilarityThreshold) {
 
 		String report = "watermark detection report";
-		report = report + "\ninvestigated dataset:\t\t" + datasetName;
-		report = report + "\ndate:\t\t\t\t" + LocalDateTime.now();
+		report = report + "\ninvestigated dataset:\t\t\t" + datasetName;
+		report = report + "\ndate:\t\t\t\t\t\t\t" + LocalDateTime.now();
 		report = report + "\nfragment similarity threshold:\t" + fragmentSimilarityThreshold;
 		report = report + "\nwatermark similarity threshold:\t" + watermarkSimilarityThreshold;
 		report = report + "\n";
@@ -43,7 +43,7 @@ public class DetectionService {
 			Fragment suspiciousFragment = suspiciousFragments.get(i);
 			Collections.sort(suspiciousFragment.getMeasurements());
 
-			report = report + "\nsuspicious fragment:\t\t" + suspiciousFragment.getDeviceId();
+			report = report + "\nsuspicious fragment:\t\t\t" + suspiciousFragment.getDeviceId();
 			report = report + "\t" + suspiciousFragment.getType();
 			report = report + "\t" + suspiciousFragment.getUnit();
 			report = report + "\t" + suspiciousFragment.getDate();
@@ -80,7 +80,7 @@ public class DetectionService {
 
 			if (matchingFragmentSimilarity.compareTo(fragmentSimilarityThreshold) >= 0) {
 
-				report = report + "\nmatching original fragment:\t" + matchingFragment.getDeviceId();
+				report = report + "\nmatching original fragment:\t\t" + matchingFragment.getDeviceId();
 				report = report + "\t" + matchingFragment.getType();
 				report = report + "\t" + matchingFragment.getUnit();
 				report = report + "\t" + matchingFragment.getDate();
@@ -104,32 +104,32 @@ public class DetectionService {
 						matchingFragment.getType(), matchingFragment.getUnit(), matchingFragment.getDate().plusDays(1));
 
 				// generated embedded watermarks
-				for (Entry<List<Integer>, BigDecimal[]> watermark : generateEmbeddedWatermarks(usabilityConstraint,
-						matchingFragment, prevFragment, nextFragment, requests).entrySet()) {
+				for (Request request : requests) {
+					BigDecimal[] watermark = WatermarkGenerationService.generateWatermark(request, usabilityConstraint,
+							matchingFragment, prevFragment, nextFragment);
 
 					// watermark similarity search
-					BigDecimal watermarkSimilarity = getWatermarkSimilarity(noisyWatermark, watermark.getValue(),
+					BigDecimal watermarkSimilarity = getWatermarkSimilarity(noisyWatermark, watermark,
 							usabilityConstraint, matchingSequence);
 
 					// add to list if above threshold
 					if (watermarkSimilarity.compareTo(watermarkSimilarityThreshold) >= 0) {
-						DataLeaker leaker = new DataLeaker(watermarkSimilarity, watermark.getKey());
+						DataLeaker leaker = new DataLeaker(watermarkSimilarity, request.getDataUserId());
 						fragmentLeakers.add(leaker);
 					}
 				}
-
-				datasetLeaker.add(fragmentLeakers);
 
 				if (fragmentLeakers.size() > 0) {
 					Collections.sort(fragmentLeakers);
 					report = report + "\nmatching watermarks: ";
 					for (DataLeaker leaker : fragmentLeakers) {
-						report = report + "\n\t\t\t\t" + leaker.toString();
+						report = report + "\n\t\t\t\t\t" + leaker.toString();
 					}
 				} else {
 					report = report + "\nno matching watermarks detected";
 				}
-
+				
+				datasetLeaker.add(fragmentLeakers);
 			} else {
 				report = report + "\nno matching fragment detected";
 			}
@@ -264,65 +264,6 @@ public class DetectionService {
 		}
 
 		return watermark;
-	}
-
-	private static HashMap<List<Integer>, BigDecimal[]> generateEmbeddedWatermarks(
-			UsabilityConstraint usabilityConstraint, Fragment matchingFragment, Fragment prevFragment,
-			Fragment nextFragment, List<Request> requests) {
-
-		HashMap<List<Integer>, BigDecimal[]> watermarks = new HashMap<List<Integer>, BigDecimal[]>();
-		List<Integer> dataUserIds = new LinkedList<>();
-		List<List<Integer>> dataUserIdCombinations = new LinkedList<>();
-
-		for (Request request : requests) {
-			BigDecimal[] watermark = WatermarkGenerationService.generateWatermark_w2(request, usabilityConstraint,
-					matchingFragment, prevFragment, nextFragment);
-			List<Integer> dataUserId = new LinkedList<>();
-			dataUserId.add(request.getDataUserId());
-			watermarks.put(dataUserId, watermark);
-
-			dataUserIds.add(request.getDataUserId());
-		}
-
-		for (int i = 0; i < dataUserIds.size(); i++) {
-			int currentId = dataUserIds.get(i);
-			for (int j = i + 1; j < dataUserIds.size(); j++) {
-				int otherId = dataUserIds.get(j);
-				List<Integer> dataUserIdCombination = new LinkedList<>();
-				dataUserIdCombination.add(currentId);
-				dataUserIdCombination.add(otherId);
-
-				if (dataUserIdCombinations.contains(dataUserIdCombination) == false) {
-					dataUserIdCombinations.add(dataUserIdCombination);
-				}
-			}
-		}
-
-		for (List<Integer> combination : dataUserIdCombinations) {
-			BigDecimal[] watermark = new BigDecimal[matchingFragment.getMeasurements().size()];
-			List<BigDecimal[]> combinationWatermarks = new LinkedList<>();
-			
-			for(Integer dataUserId : combination) {
-				List<Integer> id = new LinkedList<>();
-				id.add(dataUserId);
-				combinationWatermarks.add(watermarks.get(id));
-			}
-			
-			for (int i = 0; i < watermark.length; i++) {
-				BigDecimal newMark = new BigDecimal("0.0");
-				
-				for (BigDecimal[] wm : combinationWatermarks) {
-					newMark = newMark.add(wm[i]);
-				}
-				newMark = newMark.divide(BigDecimal.valueOf(combination.size()), RoundingMode.HALF_UP);
-				watermark[i] = newMark;
-			}
-			
-			watermarks.put(combination, watermark);
-		}
-
-		return watermarks;
-
 	}
 
 	private static BigDecimal getWatermarkSimilarity(BigDecimal[] suspiciousWatermark, BigDecimal[] originalWatermark,

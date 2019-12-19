@@ -20,7 +20,6 @@ public class Fragment implements Comparable<Fragment> {
 	private String unit;
 	private LocalDate date;
 	private long secretKey;
-	private String datasetId;
 	private List<Measurement> measurements;
 
 	public Fragment() {
@@ -35,15 +34,13 @@ public class Fragment implements Comparable<Fragment> {
 		this.measurements = new LinkedList<Measurement>();
 	}
 	
-	public Fragment(String deviceId, String type, String unit, LocalDate date, long secretKey,
-			String datasetId) {
+	public Fragment(String deviceId, String type, String unit, LocalDate date, long secretKey) {
 		super();
 		this.deviceId = deviceId;
 		this.type = type;
 		this.unit = unit;
 		this.date = date;
 		this.secretKey = secretKey;
-		this.datasetId = datasetId;
 	}
 
 	public void setMeasurementsFromJsonArrayString(String measurements) {
@@ -200,14 +197,6 @@ public class Fragment implements Comparable<Fragment> {
 
 	public void setSecretKey(long secretKey) {
 		this.secretKey = secretKey;
-	}
-
-	public String getDatasetId() {
-		return datasetId;
-	}
-
-	public void setDatasetId(String datasetId) {
-		this.datasetId = datasetId;
 	}
 
 	public List<Measurement> getMeasurements() {

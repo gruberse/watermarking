@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import entities.DataProfile;
 import entities.Fragment;
 import entities.Request;
 import entities.UsabilityConstraint;
@@ -17,19 +16,19 @@ import utils.WatermarkGenerationService;
 
 public class DataService {
 
-	public static void getDataset(int method, String fileName, int dataUserId, String deviceId, String type,
-			String unit, LocalDate from, LocalDate to) {
-		FileService.writeDataset(fileName,
-				watermarkEmbedding(method, dataUserId, DatabaseService.getFragments(deviceId, type, unit, from, to)));
+	public static void getDataset(String datasetName, int dataUserId, String deviceId, String type, String unit,
+			LocalDate from, LocalDate to) {
+		FileService.writeDataset(datasetName,
+				watermarkEmbedding(dataUserId, DatabaseService.getFragments(deviceId, type, unit, from, to)));
 	}
 
-	public static void getDataset(int method, String fileName, int dataUserId, int noOfDevices, String type,
-			String unit) {
-		FileService.writeDataset(fileName, watermarkEmbedding(method, dataUserId,
-				DatabaseService.getFragments(noOfDevices, type, unit)));
+	public static void getDataset(String datasetName, int dataUserId, int noOfDevices, String type, String unit,
+			LocalDate from, LocalDate to) {
+		FileService.writeDataset(datasetName,
+				watermarkEmbedding(dataUserId, DatabaseService.getFragments(noOfDevices, type, unit, from, to)));
 	}
 
-	private static List<Fragment> watermarkEmbedding(int method, int dataUserId, List<Fragment> fragments) {
+	private static List<Fragment> watermarkEmbedding(int dataUserId, List<Fragment> fragments) {
 		LocalDateTime timestamp = LocalDateTime.now();
 
 		Collections.sort(fragments);
@@ -74,27 +73,20 @@ public class DataService {
 
 			// generate watermark
 			BigDecimal[] watermark = new BigDecimal[fragment.getMeasurements().size()];
-			if (method == 1) {
-				DataProfile dataProfile = DatabaseService.getDataProfile(fragment.getDatasetId(),
-						fragment.getDeviceId(), fragment.getType(), fragment.getUnit());
-				watermark = WatermarkGenerationService.generateWatermark_w1(request, usabilityConstraint, dataProfile,
-						fragment);
-			} else {
-				Fragment prevFragment = DatabaseService.getFragment(fragment.getDeviceId(), fragment.getType(),
-						fragment.getUnit(), fragment.getDate().minusDays(1));
-				Fragment nextFragment = DatabaseService.getFragment(fragment.getDeviceId(), fragment.getType(),
-						fragment.getUnit(), fragment.getDate().plusDays(1));
-				watermark = WatermarkGenerationService.generateWatermark_w2(request, usabilityConstraint, fragment,
-						prevFragment, nextFragment);
-			}
+			Fragment prevFragment = DatabaseService.getFragment(fragment.getDeviceId(), fragment.getType(),
+					fragment.getUnit(), fragment.getDate().minusDays(1));
+			Fragment nextFragment = DatabaseService.getFragment(fragment.getDeviceId(), fragment.getType(),
+					fragment.getUnit(), fragment.getDate().plusDays(1));
+			watermark = WatermarkGenerationService.generateWatermark(request, usabilityConstraint, fragment,
+					prevFragment, nextFragment);
 
 			// embed generated watermark
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
-				BigDecimal originalValue = fragment.getMeasurements().get(j).getValue();
-				BigDecimal watermarkedValue = originalValue.add(watermark[j]);
+				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".", ","));
+				BigDecimal watermarkedValue = fragment.getMeasurements().get(j).getValue().add(watermark[j]);
 				fragment.getMeasurements().get(j).setValue(watermarkedValue);
-				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
-				// ","));
+				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
+				//","));
 			}
 			// update watermarked fragment
 			fragments.set(i, fragment);

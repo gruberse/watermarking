@@ -1,6 +1,5 @@
 package utils;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -14,7 +13,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import entities.DataProfile;
 import entities.Fragment;
 import entities.Request;
 import entities.UsabilityConstraint;
@@ -91,8 +89,8 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "INSERT INTO fragment (device_id, type, unit, date, measurements, secret_key, dataset_id) "
-					+ "VALUES (?, ?, ?, ?, ?::JSON, ?, ?)";
+			String sql = "INSERT INTO fragment (device_id, type, unit, date, measurements, secret_key) "
+					+ "VALUES (?, ?, ?, ?, ?::JSON, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			for (Fragment fragment : fragments) {
@@ -102,7 +100,6 @@ public class DatabaseService {
 				preparedStatement.setDate(4, Date.valueOf(fragment.getDate()));
 				preparedStatement.setObject(5, fragment.getMeasurementsAsJsonArrayString());
 				preparedStatement.setLong(6, fragment.getSecretKey());
-				preparedStatement.setString(7, fragment.getDatasetId());
 				preparedStatement.executeUpdate();
 			}
 
@@ -117,7 +114,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT date, measurements, secret_key, dataset_id FROM fragment "
+			String sql = "SELECT date, measurements, secret_key FROM fragment "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -129,8 +126,7 @@ public class DatabaseService {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			if (resultSet.next()) {
 				Fragment fragment = new Fragment(deviceId, type, unit,
-						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"),
-						resultSet.getString("dataset_id"));
+						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"));
 				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
 				return fragment;
 			}
@@ -151,7 +147,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT date, measurements, secret_key, dataset_id FROM fragment "
+			String sql = "SELECT date, measurements, secret_key FROM fragment "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date BETWEEN ? AND ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -164,40 +160,7 @@ public class DatabaseService {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {
 				Fragment fragment = new Fragment(deviceId, type, unit,
-						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"),
-						resultSet.getString("dataset_id"));
-				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
-				fragments.add(fragment);
-			}
-
-			resultSet.close();
-			preparedStatement.close();
-			connection.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return fragments;
-	}
-	
-	public static List<Fragment> getFragments(String deviceId, String type, String unit) {
-		List<Fragment> fragments = new LinkedList<>();
-
-		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
-				"postgres", "admin")) {
-
-			String sql = "SELECT date, measurements, secret_key, dataset_id, date FROM fragment "
-					+ "WHERE device_id = ? AND type = ? AND unit = ?";
-
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.setString(1, deviceId);
-			preparedStatement.setString(2, type);
-			preparedStatement.setString(3, unit);
-
-			ResultSet resultSet = preparedStatement.executeQuery();
-			while (resultSet.next()) {
-				Fragment fragment = new Fragment(deviceId, type, unit,
-						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"),
-						resultSet.getString("dataset_id"));
+						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"));
 				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
 				fragments.add(fragment);
 			}
@@ -226,8 +189,7 @@ public class DatabaseService {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {
 				Fragment fragment = new Fragment(resultSet.getString("device_id"), type, unit,
-						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"),
-						resultSet.getString("dataset_id"));
+						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"));
 				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
 				fragments.add(fragment);
 			}
@@ -241,14 +203,14 @@ public class DatabaseService {
 		return fragments;
 	}
 
-	public static List<Fragment> getFragments(int noOfDevices, String type, String unit) {
+	public static List<Fragment> getFragments(int noOfDevices, String type, String unit, LocalDate from, LocalDate to) {
 		List<Fragment> fragments = new LinkedList<>();
 
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
 			String sql = "SELECT distinct device_id FROM fragment "
-					+ "WHERE type = ? AND unit = ?";
+					+ "WHERE type = ? AND unit = ? AND date BETWEEN ? AND ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
@@ -257,7 +219,7 @@ public class DatabaseService {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			int counter = 0;
 			while (resultSet.next() && counter < noOfDevices) {
-				fragments.addAll(getFragments(resultSet.getString("device_id"), type, unit));
+				fragments.addAll(getFragments(resultSet.getString("device_id"), type, unit, from, to));
 				counter = counter + 1;
 			}
 
@@ -269,71 +231,6 @@ public class DatabaseService {
 		}
 
 		return fragments;
-	}
-
-	public static void insertProfiles(List<DataProfile> dataProfiles) {
-		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
-				"postgres", "admin")) {
-
-			String sql = "INSERT INTO data_profile (dataset_id, device_id, type, unit, "
-					+ "relative_value_distribution, relative_slope_distribution, relative_curvature_distribution) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-			for (DataProfile dataProfile : dataProfiles) {
-				preparedStatement.setString(1, dataProfile.getDatasetId());
-				preparedStatement.setString(2, dataProfile.getDeviceId());
-				preparedStatement.setString(3, dataProfile.getType());
-				preparedStatement.setString(4, dataProfile.getUnit());
-				preparedStatement.setArray(5,
-						connection.createArrayOf("text", dataProfile.getRelativeValueDistributionAsStringArray()));
-				preparedStatement.setArray(6,
-						connection.createArrayOf("text", dataProfile.getRelativeSlopeDistributionAsStringArray()));
-				preparedStatement.setArray(7,
-						connection.createArrayOf("text", dataProfile.getRelativeCurvatureDistributionAsStringArray()));
-				preparedStatement.executeUpdate();
-			}
-
-			preparedStatement.close();
-			connection.close();
-		} catch (SQLException ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	public static DataProfile getDataProfile(String datasetId, String deviceId, String type, String unit) {
-		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
-				"postgres", "admin")) {
-
-			String sql = "SELECT relative_value_distribution, relative_slope_distribution, relative_curvature_distribution "
-					+ "FROM data_profile "
-					+ "WHERE dataset_id = ? AND device_id = ? AND type = ? AND unit = ?";
-
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.setString(1, datasetId);
-			preparedStatement.setString(2, deviceId);
-			preparedStatement.setString(3, type);
-			preparedStatement.setString(4, unit);
-
-			ResultSet resultSet = preparedStatement.executeQuery();
-			if (resultSet.next()) {
-				DataProfile dataProfile = new DataProfile(datasetId, deviceId, type, unit);
-				dataProfile.setRelativeValueDistributionFromStringArray(
-						(String[]) resultSet.getArray("relative_value_distribution").getArray());
-				dataProfile.setRelativeSlopeDistributionFromStringArray(
-						(String[]) resultSet.getArray("relative_slope_distribution").getArray());
-				dataProfile.setRelativeCurvatureDistributionFromStringArray(
-						(String[]) resultSet.getArray("relative_curvature_distribution").getArray());
-				return dataProfile;
-			}
-
-			resultSet.close();
-			preparedStatement.close();
-			connection.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return null;
 	}
 
 	public static void insertRequest(Request request) {
