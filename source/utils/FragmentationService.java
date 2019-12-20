@@ -27,7 +27,7 @@ public class FragmentationService {
 			JSONParser parser = new JSONParser();
 
 			// retrieve measurements from json file
-			JSONArray array = (JSONArray) parser.parse(new FileReader(fileName));
+			JSONArray array = (JSONArray) parser.parse(new FileReader(FileService.FOLDER + fileName));
 			for (Object measurementObject : array) {
 				JSONObject jsonMeasurement = (JSONObject) measurementObject;
 

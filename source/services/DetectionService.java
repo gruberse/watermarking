@@ -4,11 +4,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import entities.DataLeaker;
 import entities.Fragment;
@@ -25,7 +22,7 @@ public class DetectionService {
 
 	public static void getReport(String datasetName, String reportName, BigDecimal fragmentSimilarityThreshold,
 			BigDecimal watermarkSimilarityThreshold) {
-
+		
 		String report = "watermark detection report";
 		report = report + "\ninvestigated dataset:\t\t\t" + datasetName;
 		report = report + "\ndate:\t\t\t\t\t\t\t" + LocalDateTime.now();
@@ -128,7 +125,7 @@ public class DetectionService {
 				} else {
 					report = report + "\nno matching watermarks detected";
 				}
-				
+
 				datasetLeaker.add(fragmentLeakers);
 			} else {
 				report = report + "\nno matching fragment detected";
@@ -171,9 +168,8 @@ public class DetectionService {
 
 	private static List<IndexMap> getSequence(Fragment suspiciousFragment, Fragment originalFragment,
 			UsabilityConstraint usabilityConstraint) {
-		HashMap<Integer, List<Integer>> sequenceCombinations = new HashMap<>();
 
-		// collect possible indexes
+		List<IndexMap> sequence = new LinkedList<>();
 		for (int i = 0; i < suspiciousFragment.getMeasurements().size(); i++) {
 			Measurement suspiciousMeasurement = suspiciousFragment.getMeasurements().get(i);
 			for (int j = 0; j < originalFragment.getMeasurements().size(); j++) {
@@ -181,42 +177,15 @@ public class DetectionService {
 				if ((originalMeasurement.getValue().subtract(usabilityConstraint.getMaximumError()))
 						.compareTo(suspiciousMeasurement.getValue()) <= 0
 						&& (originalMeasurement.getValue().add(usabilityConstraint.getMaximumError()))
-								.compareTo(suspiciousMeasurement.getValue()) >= 0) {
-					if (sequenceCombinations.containsKey(i)) {
-						List<Integer> originalIndexes = sequenceCombinations.get(i);
-						originalIndexes.add(j);
-						sequenceCombinations.replace(i, originalIndexes);
-					} else {
-						List<Integer> originalIndexes = new LinkedList<>();
-						originalIndexes.add(j);
-						sequenceCombinations.put(i, originalIndexes);
-					}
+								.compareTo(suspiciousMeasurement.getValue()) >= 0
+						&& originalMeasurement.getTime().isEqual(suspiciousMeasurement.getTime())) {
+					sequence.add(new IndexMap(i, j));
 				}
 			}
-			if (sequenceCombinations.containsKey(i) == false) {
+			if (sequence.size() < i + 1) {
 				return new LinkedList<>();
 			}
 		}
-
-		TreeMap<Integer, List<Integer>> sortedSequenceCombinations = new TreeMap<Integer, List<Integer>>();
-		sortedSequenceCombinations.putAll(sequenceCombinations);
-
-		List<IndexMap> sequence = new LinkedList<>();
-		for (Entry<Integer, List<Integer>> entry : sortedSequenceCombinations.entrySet()) {
-			int index = originalFragment.getMeasurements().size();
-			for (Integer possibleIndex : entry.getValue()) {
-				if (suspiciousFragment.getMeasurements().get(sequence.size()).getTime()
-						.equals(originalFragment.getMeasurements().get(possibleIndex).getTime())) {
-					index = possibleIndex;
-				}
-			}
-			if (index == originalFragment.getMeasurements().size()) {
-				return new LinkedList<>();
-			} else {
-				sequence.add(new IndexMap(entry.getKey(), index));
-			}
-		}
-
 		return sequence;
 	}
 

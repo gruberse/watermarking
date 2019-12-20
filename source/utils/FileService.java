@@ -8,8 +8,8 @@ import java.util.List;
 import entities.Fragment;
 
 public class FileService {
-	
-	private static final String folder = "files/";
+
+	public static final String FOLDER = "files/";
 
 	public static void writeDataset(String fileName, List<Fragment> dataset) {
 		String jsonString = "[";
@@ -24,21 +24,16 @@ public class FileService {
 	}
 
 	public static void writeFile(String fileName, String message) {
-		try (FileWriter file = new FileWriter(fileName)) {
+		try (FileWriter file = new FileWriter(FOLDER + fileName)) {
 			file.write(message);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
 	}
-	
-	public static String getFileName(String datasetName, String operation, String type) {
-		datasetName = datasetName.replace(folder, "").split("\\.")[0];
-		return folder + datasetName + "_" + operation + "." + type;
-	}
 
-	public static void deleteFiles(String type) {
-		for (File file : new File(folder).listFiles()) {
-			if(file.getName().contains(type)) {
+	public static void deleteFiles(String term) {
+		for (File file : new File(FOLDER).listFiles()) {
+			if (file.getName().contains(term)) {
 				file.delete();
 			}
 		}
