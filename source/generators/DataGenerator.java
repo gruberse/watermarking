@@ -20,12 +20,14 @@ public class DataGenerator {
 		Random randomPRNG = new Random();
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		int startMinute = randomPRNG.nextInt(5);
+		int startSecond = randomPRNG.nextInt(60);
 
 		for (int i = 0; i < noOfDevices; i++) {
 			String deviceId = "Device" + i;
 
-			int minute = randomPRNG.nextInt(5);
-			int second = randomPRNG.nextInt(60);
+			int minute = startMinute;
+			int second = startSecond;
 			BigDecimal value = BigDecimal.valueOf(randomPRNG.nextDouble() * 22.5);
 			int noOfDeclining = 0;
 			int noOfUpclining = 0;
@@ -48,6 +50,10 @@ public class DataGenerator {
 						value = value.add(nextValue);
 						noOfDeclining = 0;
 						noOfUpclining = -20;
+					} else if(value.add(nextValue).compareTo(BigDecimal.valueOf(55)) >= 0) {
+						value = value.subtract(nextValue);
+						noOfDeclining = -20;
+						noOfUpclining = 0;
 					} else if (randomPRNG.nextInt(100) > ((50 + noOfUpclining) - noOfDeclining)) {
 						noOfUpclining = noOfUpclining + 5;
 						noOfDeclining = 0;

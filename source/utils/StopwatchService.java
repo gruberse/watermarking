@@ -4,15 +4,18 @@ import java.util.concurrent.TimeUnit;
 
 public class StopwatchService {
 
-	private static long startTime;
-	private static long endTime;
+	private long startTime;
+	private long endTime;
 	
-	public static void start() {
+	public StopwatchService() {
 		startTime = System.nanoTime();
 	}
 	
-	public static Long stop() {
+	public void stop() {
 		endTime = System.nanoTime();
+	}
+	
+	public Long getTime() {
 		return TimeUnit.SECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS);
 	}
 }

@@ -107,6 +107,30 @@ public class Fragment implements Comparable<Fragment> {
 
 		return mean;
 	}
+	
+	public BigDecimal getMin() {
+		BigDecimal min = new BigDecimal("55.0");
+
+		for (Measurement measurement : getMeasurements()) {
+			if(min.compareTo(measurement.getValue()) > 0) {
+				min = measurement.getValue();
+			}
+		}
+
+		return min;
+	}
+	
+	public BigDecimal getMax() {
+		BigDecimal max = new BigDecimal("0.0");
+
+		for (Measurement measurement : getMeasurements()) {
+			if(max.compareTo(measurement.getValue()) < 0) {
+				max = measurement.getValue();
+			}
+		}
+
+		return max;
+	}
 
 	@Override
 	public int compareTo(Fragment o) {

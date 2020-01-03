@@ -1,5 +1,6 @@
 package utils;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -89,8 +90,8 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "INSERT INTO fragment (device_id, type, unit, date, measurements, secret_key) "
-					+ "VALUES (?, ?, ?, ?, ?::JSON, ?)";
+			String sql = "INSERT INTO fragment (device_id, type, unit, date, measurements, secret_key, min, max) "
+					+ "VALUES (?, ?, ?, ?, ?::JSON, ?, ?, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			for (Fragment fragment : fragments) {
@@ -100,6 +101,8 @@ public class DatabaseService {
 				preparedStatement.setDate(4, Date.valueOf(fragment.getDate()));
 				preparedStatement.setObject(5, fragment.getMeasurementsAsJsonArrayString());
 				preparedStatement.setLong(6, fragment.getSecretKey());
+				preparedStatement.setBigDecimal(7, fragment.getMin());
+				preparedStatement.setBigDecimal(8, fragment.getMax());
 				preparedStatement.executeUpdate();
 			}
 
@@ -174,17 +177,19 @@ public class DatabaseService {
 		return fragments;
 	}
 	
-	public static List<Fragment> getFragments(String type, String unit) {
+	public static List<Fragment> getFragments(String type, String unit, BigDecimal min, BigDecimal max) {
 		List<Fragment> fragments = new LinkedList<>();
 
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT * FROM fragment WHERE type = ? AND unit = ?";
+			String sql = "SELECT * FROM fragment WHERE type = ? AND unit = ? AND min >= ? AND max <= ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, unit);
+			preparedStatement.setBigDecimal(3, min);
+			preparedStatement.setBigDecimal(4, max);
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {

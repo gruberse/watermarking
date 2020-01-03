@@ -18,7 +18,7 @@ public class LogService {
 	public static void startLogging(String logName) {
 		LOG_NAME = FOLDER + logName;
 		try (FileWriter file = new FileWriter(LOG_NAME)) {
-			file.write(LOG_NAME.toUpperCase() + " START LOGGING ...");
+			file.write(LOG_NAME.toUpperCase() + " START LOGGING ...\n");
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -34,7 +34,7 @@ public class LogService {
 	
 	public static void log(String level, String className, String operation) {
 		try (BufferedWriter out = new BufferedWriter(new FileWriter(LOG_NAME, true))) {
-			out.write("\n\n" + LocalDateTime.now().format(formatter) + level + "[" + className + "]\t" + operation + ": ...");
+			out.write("\n" + LocalDateTime.now().format(formatter) + level + "[" + className + "]\t" + operation + ": ...");
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}

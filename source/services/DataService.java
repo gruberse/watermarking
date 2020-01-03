@@ -20,41 +20,52 @@ public class DataService {
 
 	public static void getDataset(String datasetName, int dataUserId, String deviceId, String type, String unit,
 			LocalDate from, LocalDate to) {
+		
 		// retrieve fragments
-		StopwatchService.start();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
+		StopwatchService stopwatchService = new StopwatchService();
 		List<Fragment> fragments = DatabaseService.getFragments(deviceId, type, unit, from, to);
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments(" + deviceId + ", " + type
-				+ ", " + unit + ", " + from.toString() + ", " + to.toString() + ")", StopwatchService.stop());
+		stopwatchService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", stopwatchService.getTime());
 
 		// watermark fragments
-		StopwatchService.start();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
+		stopwatchService = new StopwatchService();
 		fragments = watermarkEmbedding(dataUserId, fragments);
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding(" + dataUserId + ")", StopwatchService.stop());
+		stopwatchService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", stopwatchService.getTime());
 		
 		// write to file system
-		StopwatchService.start();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset");
+		stopwatchService = new StopwatchService();
 		FileService.writeDataset(datasetName, fragments);
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset(" + datasetName + ")", StopwatchService.stop());
+		stopwatchService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", stopwatchService.getTime());
 	}
 
 	public static void getDataset(String datasetName, int dataUserId, int noOfDevices, String type, String unit,
 			LocalDate from, LocalDate to) {
-
+		
 		// retrieve fragments
-		StopwatchService.start();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
+		StopwatchService stopwatchService = new StopwatchService();
 		List<Fragment> fragments = DatabaseService.getFragments(noOfDevices, type, unit, from, to);
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments(" + noOfDevices + ", " + type
-				+ ", " + unit + ", " + from.toString() + ", " + to.toString() + ")", StopwatchService.stop());
+		stopwatchService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", stopwatchService.getTime());
 
 		// watermark fragments
-		StopwatchService.start();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
+		stopwatchService = new StopwatchService();
 		fragments = watermarkEmbedding(dataUserId, fragments);
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding(" + dataUserId + ")", StopwatchService.stop());
+		stopwatchService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", stopwatchService.getTime());
 		
 		// write to file system
-		StopwatchService.start();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset");
+		stopwatchService = new StopwatchService();
 		FileService.writeDataset(datasetName, fragments);
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset(" + datasetName + ")", StopwatchService.stop());
+		stopwatchService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", stopwatchService.getTime());
 	}
 
 	private static List<Fragment> watermarkEmbedding(int dataUserId, List<Fragment> fragments) {

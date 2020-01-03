@@ -17,6 +17,12 @@ public class EnvironmentSetup {
 		DatabaseService.deleteTable("usability_constraint");
 	}
 	
+	public static void resetDatabase() {
+		DatabaseService.deleteTable("request");
+		DatabaseService.deleteTable("fragment");
+		//DatabaseService.deleteTable("usability_constraint");
+	}
+	
 	public static void resetFiles() {
 		FileService.deleteFiles("dataset");
 	}

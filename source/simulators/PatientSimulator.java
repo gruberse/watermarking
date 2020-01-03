@@ -7,16 +7,16 @@ import utils.StopwatchService;
 public class PatientSimulator {
 	
 	public static void storeDataset() {
-		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(files/testdata.json)");
-		StopwatchService.start();
-		ContainerService.uploadDataset("testdata.json");
-		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(files/testdata.json)", StopwatchService.stop());
+		storeDataset("testdata.json");
 	}
 
 	public static void storeDataset(String datasetName) {
-		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(" + datasetName + ")");
-		StopwatchService.start();
+		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(datasetName=" + datasetName + ")");
+
+		StopwatchService stopwatchService = new StopwatchService();
 		ContainerService.uploadDataset(datasetName);
-		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(" + datasetName + ")", StopwatchService.stop());
+		stopwatchService.stop();
+		
+		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset", stopwatchService.getTime());
 	}
 }
