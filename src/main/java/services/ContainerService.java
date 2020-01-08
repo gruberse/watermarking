@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Random;
 
 import entities.Fragment;
-import utils.DatabaseService;
-import utils.FragmentationService;
-import utils.LogService;
-import utils.StopwatchService;
+import utilities.DatabaseService;
+import utilities.FragmentationService;
+import utilities.LogService;
+import utilities.StopwatchService;
 
 public class ContainerService {
 

@@ -13,12 +13,12 @@ import entities.IndexMap;
 import entities.Measurement;
 import entities.Request;
 import entities.UsabilityConstraint;
-import utils.DatabaseService;
-import utils.FileService;
-import utils.FragmentationService;
-import utils.LogService;
-import utils.StopwatchService;
-import utils.WatermarkGenerationService;
+import utilities.DatabaseService;
+import utilities.FileService;
+import utilities.FragmentationService;
+import utilities.LogService;
+import utilities.StopwatchService;
+import utilities.WatermarkGenerationService;
 
 public class DetectionService {
 
@@ -195,8 +195,10 @@ public class DetectionService {
 			UsabilityConstraint usabilityConstraint) {
 
 		List<IndexMap> sequence = new LinkedList<>();
+		
 		for (int i = 0; i < suspiciousFragment.getMeasurements().size(); i++) {
 			Measurement suspiciousMeasurement = suspiciousFragment.getMeasurements().get(i);
+			
 			for (int j = 0; j < originalFragment.getMeasurements().size(); j++) {
 				Measurement originalMeasurement = originalFragment.getMeasurements().get(j);
 				if ((originalMeasurement.getValue().subtract(usabilityConstraint.getMaximumError()))
@@ -207,6 +209,7 @@ public class DetectionService {
 					sequence.add(new IndexMap(i, j));
 				}
 			}
+			
 			if (sequence.size() < i + 1) {
 				return new LinkedList<>();
 			}

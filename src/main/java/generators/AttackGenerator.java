@@ -9,8 +9,8 @@ import java.util.Random;
 
 import entities.Fragment;
 import entities.Measurement;
-import utils.FileService;
-import utils.FragmentationService;
+import utilities.FileService;
+import utilities.FragmentationService;
 
 public class AttackGenerator {
 

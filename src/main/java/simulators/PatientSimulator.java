@@ -1,8 +1,8 @@
 package simulators;
 
 import services.ContainerService;
-import utils.LogService;
-import utils.StopwatchService;
+import utilities.LogService;
+import utilities.StopwatchService;
 
 public class PatientSimulator {
 	

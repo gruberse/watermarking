@@ -3,8 +3,8 @@ package simulators;
 import java.time.LocalDate;
 
 import services.DataService;
-import utils.LogService;
-import utils.StopwatchService;
+import utilities.LogService;
+import utilities.StopwatchService;
 
 public class DataUserSimulator {
 

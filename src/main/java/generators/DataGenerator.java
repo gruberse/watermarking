@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import entities.Fragment;
 import entities.Measurement;
-import utils.FileService;
+import utilities.FileService;
 
 public class DataGenerator {
 
@@ -31,7 +31,7 @@ public class DataGenerator {
 			BigDecimal value = BigDecimal.valueOf(randomPRNG.nextDouble() * 22.5);
 			int noOfDeclining = 0;
 			int noOfUpclining = 0;
-
+			
 			for (LocalDate date : LocalDate.parse(from, formatter).datesUntil(LocalDate.parse(to, formatter))
 					.collect(Collectors.toList())) {
 				Fragment fragment = new Fragment();

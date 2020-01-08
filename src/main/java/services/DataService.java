@@ -10,11 +10,11 @@ import java.util.List;
 import entities.Fragment;
 import entities.Request;
 import entities.UsabilityConstraint;
-import utils.DatabaseService;
-import utils.FileService;
-import utils.LogService;
-import utils.StopwatchService;
-import utils.WatermarkGenerationService;
+import utilities.DatabaseService;
+import utilities.FileService;
+import utilities.LogService;
+import utilities.StopwatchService;
+import utilities.WatermarkGenerationService;
 
 public class DataService {
 

@@ -3,8 +3,8 @@ package simulators;
 import java.math.BigDecimal;
 
 import services.DetectionService;
-import utils.LogService;
-import utils.StopwatchService;
+import utilities.LogService;
+import utilities.StopwatchService;
 
 public class DataDetectiveSimulator {
 

@@ -1,4 +1,4 @@
-package utils;
+package utilities;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -9,7 +9,7 @@ import entities.Fragment;
 
 public class FileService {
 
-	public static final String FOLDER = "files/";
+	public static String FOLDER = "files/";
 
 	public static void writeDataset(String fileName, List<Fragment> dataset) {
 		String jsonString = "[";
