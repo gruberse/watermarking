@@ -220,6 +220,8 @@ public class DatabaseService {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, unit);
+			preparedStatement.setDate(3, Date.valueOf(from));
+			preparedStatement.setDate(4, Date.valueOf(to));
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			int counter = 0;

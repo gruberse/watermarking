@@ -15,7 +15,7 @@ public class LogService {
 
 	public static void startLogging() {
 		try (FileWriter file = new FileWriter(FOLDER + "log.txt")) {
-			file.write("START LOGGING ...\n");
+			file.write("START LOGGING ...");
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -31,6 +31,9 @@ public class LogService {
 	
 	public static void log(String level, String className, String operation) {
 		try (BufferedWriter out = new BufferedWriter(new FileWriter(FOLDER + "log.txt", true))) {
+			if(level.contentEquals(SIMULATOR_LEVEL)) {
+				out.write("\n");
+			}
 			out.write("\n" + LocalDateTime.now().format(formatter) + level + "[" + className + "]\t" + operation + ": ...");
 		} catch (IOException ex) {
 			ex.printStackTrace();

@@ -1,6 +1,5 @@
 package testdrivers;
 
-import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,25 +24,27 @@ public class Controller {
 
 			if (args[0].contentEquals("help")) {
 				System.out.println("reset");
-				System.out.println("\t-table [fragment/request/usability_constraint]");
+				System.out.println("\t-table fragment");
+				System.out.println("\t-table request");
+				System.out.println("\t-table usability_constraint");
 				System.out.println("\t-files [term]");
 
 				System.out.println("set");
-				System.out.println("\t-usability_constraint [maxError] [numberOfWatermarks] [numberOfRanges]");
+				System.out.println("\t-usability_constraint [maximumError] [numberOfWatermarks] [numberOfRanges]");
 
 				System.out.println("log");
 				System.out.println("\t-start");
 				System.out.println("\t-stop");
 
 				System.out.println("DataGenerator");
-				System.out.println("\t[datasetName] [noOfDevices] [from] [to]");
+				System.out.println("\t[datasetName] [deviceId] [from] [to]");
 
 				System.out.println("AttackGenerator");
 				System.out.println("\t-deletion [datasetName] [newDatasetName] [n]");
 				System.out.println("\t-random [datasetName] [newDatasetName] [maxError]");
 				System.out.println("\t-rounding [datasetName] [newDatasetName] [decimalDigits]");
 				System.out.println("\t-subset [datasetName] [newDatasetName] [startIndex] [endIndex]");
-				System.out.println("\t-collusion [datasetName1] [datasetNameN] ... [newDatasetName]");
+				System.out.println("\t-collusion [datasetName1] ... [datasetNameN] [newDatasetName]");
 
 				System.out.println("PatientSimulator");
 				System.out.println("\t[]");
@@ -69,10 +70,8 @@ public class Controller {
 
 			if (args[0].contentEquals("set")) {
 				if (args[1].contentEquals("-usability_constraint")) {
-					DatabaseService
-							.insertUsabilityConstraint(new UsabilityConstraint("cbg", "mmol/L", new BigDecimal("0.0"),
-									new BigDecimal("55.0"), BigDecimal.valueOf(Double.parseDouble(args[2])),
-									Integer.parseInt(args[3]), Integer.parseInt(args[4])));
+					DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(Double.parseDouble(args[2]),
+							Integer.parseInt(args[3]), Integer.parseInt(args[4])));
 				}
 			}
 
@@ -132,7 +131,7 @@ public class Controller {
 			}
 
 			if (args[0].contentEquals("DataGenerator")) {
-				DataGenerator.generateDataset(args[1], Integer.parseInt(args[2]), args[3], args[4]);
+				DataGenerator.generateDataset(args[1], args[2], args[3], args[4]);
 			}
 		}
 
@@ -142,16 +141,18 @@ public class Controller {
 			DatabaseService.deleteTable("usability_constraint");
 			FileService.deleteFiles("dataset");
 
-			DatabaseService.insertUsabilityConstraint(new UsabilityConstraint("cbg", "mmol/L", new BigDecimal("0.0"),
-					new BigDecimal("55.0"), BigDecimal.valueOf(0.5), 256, 10));
+			DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(0.5, 256, 10));
 
 			LogService.startLogging();
 
+			/*
 			PatientSimulator.storeDataset();
 			DataUserSimulator.requestDataset("requested_dataset_1.json", 1, "DexG5MobRec_SM64305440", "2017-02-04",
 					"2017-02-04");
 			DataDetectiveSimulator.detectLeakage("requested_dataset_1.json", "requested_dataset_1_report.txt", 0.8,
 					0.8);
+					*/
+			DataGenerator.generateDataset("generated_dataset.json", "Device_1", "2019-01-01", "2019-01-30");
 
 			LogService.stopLogging();
 		}
