@@ -1,5 +1,6 @@
 package utilities;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,8 +11,8 @@ import entities.Fragment;
 public class FileService {
 
 	public static String FOLDER = "files/";
-
-	public static void writeDataset(String fileName, List<Fragment> dataset) {
+	
+	public static void writeDataset(String datasetName, List<Fragment> dataset) {
 		String jsonString = "[";
 		for (int i = 0; i < dataset.size(); i++) {
 			jsonString = jsonString + dataset.get(i).getMeasurementsAsJsonString();
@@ -20,7 +21,15 @@ public class FileService {
 		}
 		jsonString = jsonString + "\n]";
 
-		writeFile(fileName, jsonString);
+		writeFile(datasetName, jsonString);
+	}
+	
+	public static void writeLine(String fileName, String line) {
+		try (BufferedWriter out = new BufferedWriter(new FileWriter(FileService.FOLDER + fileName, true))) {
+			out.write("\n" + line);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	public static void writeFile(String fileName, String message) {

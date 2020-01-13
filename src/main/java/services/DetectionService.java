@@ -4,12 +4,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import entities.DataLeaker;
 import entities.Fragment;
-import entities.IndexMap;
 import entities.Measurement;
 import entities.Request;
 import entities.UsabilityConstraint;
@@ -55,7 +56,6 @@ public class DetectionService {
 		List<List<DataLeaker>> datasetLeaker = new LinkedList<>();
 
 		String report = "watermark detection report";
-		//report = report + "\ninvestigated dataset:\t\t\t" + datasetName;
 		report = report + "\ndate:\t\t\t\t\t\t\t" + LocalDateTime.now();
 		report = report + "\nfragment similarity threshold:\t" + fragmentSimilarityThreshold;
 		report = report + "\nwatermark similarity threshold:\t" + watermarkSimilarityThreshold;
@@ -75,7 +75,7 @@ public class DetectionService {
 
 			Fragment matchingFragment = new Fragment();
 			BigDecimal matchingFragmentSimilarity = BigDecimal.valueOf(0.0);
-			List<IndexMap> matchingSequence = new LinkedList<>();
+			HashMap<Integer, Integer> matchingSequence = new HashMap<>();
 
 			// retrieve usability constraints
 			UsabilityConstraint usabilityConstraint = DatabaseService
@@ -88,7 +88,7 @@ public class DetectionService {
 					suspiciousFragment.getMax().add(usabilityConstraint.getMaximumError()))) {
 
 				Collections.sort(fragment.getMeasurements());
-				List<IndexMap> sequence = getSequence(suspiciousFragment, fragment, usabilityConstraint);
+				HashMap<Integer, Integer> sequence = getSequence(suspiciousFragment, fragment, usabilityConstraint);
 
 				if (sequence.size() == suspiciousFragment.getMeasurements().size()) {
 					BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment, sequence);
@@ -164,7 +164,6 @@ public class DetectionService {
 			for (int j = 0; j < datasetLeaker.get(i).size(); j++) {
 				DataLeaker leaker = datasetLeaker.get(i).get(j);
 				BigDecimal probability = leaker.getProbability();
-				probability = probability.divide(BigDecimal.valueOf(datasetLeaker.size()), 4, RoundingMode.HALF_UP);
 
 				if (totalLeakageProbabilities.contains(leaker)) {
 					int index = totalLeakageProbabilities.indexOf(leaker);
@@ -176,6 +175,11 @@ public class DetectionService {
 					totalLeakageProbabilities.add(leaker);
 				}
 			}
+		}
+		for(int i = 0; i < totalLeakageProbabilities.size(); i++) {
+			BigDecimal probability = totalLeakageProbabilities.get(i).getProbability();
+			probability = probability.divide(BigDecimal.valueOf(datasetLeaker.size()));
+			totalLeakageProbabilities.get(i).setProbability(probability);
 		}
 
 		report = report + "\n\ndetection report summary";
@@ -191,10 +195,10 @@ public class DetectionService {
 		return report;
 	}
 
-	private static List<IndexMap> getSequence(Fragment suspiciousFragment, Fragment originalFragment,
+	private static HashMap<Integer, Integer> getSequence(Fragment suspiciousFragment, Fragment originalFragment,
 			UsabilityConstraint usabilityConstraint) {
 
-		List<IndexMap> sequence = new LinkedList<>();
+		HashMap<Integer, Integer> sequence = new HashMap<>();;
 		
 		for (int i = 0; i < suspiciousFragment.getMeasurements().size(); i++) {
 			Measurement suspiciousMeasurement = suspiciousFragment.getMeasurements().get(i);
@@ -206,19 +210,19 @@ public class DetectionService {
 						&& (originalMeasurement.getValue().add(usabilityConstraint.getMaximumError()))
 								.compareTo(suspiciousMeasurement.getValue()) >= 0
 						&& originalMeasurement.getTime().isEqual(suspiciousMeasurement.getTime())) {
-					sequence.add(new IndexMap(i, j));
+					sequence.put(i, j);
 				}
 			}
 			
 			if (sequence.size() < i + 1) {
-				return new LinkedList<>();
+				return new HashMap<>();
 			}
 		}
 		return sequence;
 	}
 
 	private static BigDecimal getFragmentSimilarity(Fragment suspiciousFragment, Fragment originalFragment,
-			List<IndexMap> sequence) {
+			HashMap<Integer, Integer> sequence) {
 
 		BigDecimal similarity = new BigDecimal("0.0");
 
@@ -226,12 +230,12 @@ public class DetectionService {
 			return similarity;
 		}
 
-		for (IndexMap indexMap : sequence) {
+		for (Entry<Integer, Integer> entry : sequence.entrySet()) {
 
 			BigDecimal measurementSimilarity = new BigDecimal("0.0");
 
-			Measurement suspiciousMeasurement = suspiciousFragment.getMeasurements().get(indexMap.getSuspiciousIndex());
-			Measurement originalMeasurement = originalFragment.getMeasurements().get(indexMap.getOriginalIndex());
+			Measurement suspiciousMeasurement = suspiciousFragment.getMeasurements().get(entry.getKey());
+			Measurement originalMeasurement = originalFragment.getMeasurements().get(entry.getValue());
 
 			BigDecimal distance = (suspiciousMeasurement.getValue().subtract(originalMeasurement.getValue())).abs();
 			if (distance.compareTo(BigDecimal.valueOf(0.0)) == 0) {
@@ -250,30 +254,30 @@ public class DetectionService {
 	}
 
 	private static BigDecimal[] getEmbeddedWatermark(Fragment suspiciousFragment, Fragment originalFragment,
-			List<IndexMap> sequence) {
+			HashMap<Integer, Integer> sequence) {
 
 		BigDecimal[] watermark = new BigDecimal[suspiciousFragment.getMeasurements().size()];
 
-		for (IndexMap indexMap : sequence) {
-			watermark[indexMap.getSuspiciousIndex()] = suspiciousFragment.getMeasurements()
-					.get(indexMap.getSuspiciousIndex()).getValue()
-					.subtract(originalFragment.getMeasurements().get(indexMap.getOriginalIndex()).getValue());
+		for (Entry<Integer, Integer> entry : sequence.entrySet()) {
+			watermark[entry.getKey()] = suspiciousFragment.getMeasurements()
+					.get(entry.getKey()).getValue()
+					.subtract(originalFragment.getMeasurements().get(entry.getValue()).getValue());
 		}
 
 		return watermark;
 	}
 
 	private static BigDecimal getWatermarkSimilarity(BigDecimal[] suspiciousWatermark, BigDecimal[] originalWatermark,
-			UsabilityConstraint usabilityConstraint, List<IndexMap> sequence) {
+			UsabilityConstraint usabilityConstraint, HashMap<Integer, Integer> sequence) {
 
 		BigDecimal similarity = new BigDecimal("0.0");
 		BigDecimal maxDistance = usabilityConstraint.getMaximumError().multiply(BigDecimal.valueOf(2.0));
 
-		for (IndexMap indexMap : sequence) {
+		for (Entry<Integer, Integer> entry : sequence.entrySet()) {
 
 			BigDecimal markSimilarity = new BigDecimal("0.0");
-			BigDecimal suspiciousMark = suspiciousWatermark[indexMap.getSuspiciousIndex()];
-			BigDecimal originalMark = originalWatermark[indexMap.getOriginalIndex()];
+			BigDecimal suspiciousMark = suspiciousWatermark[entry.getKey()];
+			BigDecimal originalMark = originalWatermark[entry.getValue()];
 
 			BigDecimal distance = (suspiciousMark.subtract(originalMark)).abs();
 
