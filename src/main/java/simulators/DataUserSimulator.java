@@ -3,7 +3,6 @@ package simulators;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -14,7 +13,7 @@ import services.DataService;
 import utilities.FileService;
 import utilities.FragmentationService;
 import utilities.LogService;
-import utilities.StopwatchService;
+import utilities.TimeService;
 
 public class DataUserSimulator {
 
@@ -22,32 +21,30 @@ public class DataUserSimulator {
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset(datasetName=" + datasetName
 				+ ", dataUserId=" + dataUserId + ", deviceId=" + deviceId + ", from=" + from + ", to=" + to + ")");
 		
-		StopwatchService stopwatchService = new StopwatchService();
-		DataService.getDataset(datasetName, dataUserId, deviceId, "cbg", "mmol/L", LocalDate.parse(from),
+		TimeService timeService = new TimeService();
+		DataService.requestDataset(datasetName, dataUserId, deviceId, "cbg", "mmol/L", LocalDate.parse(from),
 				LocalDate.parse(to));
-		stopwatchService.stop();
+		timeService.stop();
 		
-		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset", stopwatchService.getTime());
+		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset", timeService.getTime());
 	}
 
 	public static void requestDataset(String datasetName, int dataUserId, int noOfDevices, String from, String to) {
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset(datasetName=" + datasetName
 				+ ", dataUserId=" + dataUserId + ", noOfDevices=" + noOfDevices + ", from=" + from + ", to=" + to + ")");
 		
-		StopwatchService stopwatchService = new StopwatchService();
-		DataService.getDataset(datasetName, dataUserId, noOfDevices, "cbg", "mmol/L", LocalDate.parse(from),
+		TimeService timeService = new TimeService();
+		DataService.requestDataset(datasetName, dataUserId, noOfDevices, "cbg", "mmol/L", LocalDate.parse(from),
 				LocalDate.parse(to));
-		stopwatchService.stop();
+		timeService.stop();
 		
-		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset", stopwatchService.getTime());
+		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset", timeService.getTime());
 	}
 	
 	public static void attackDatasetByDeletion(String datasetName, String newDatasetName, int n) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
-		Collections.sort(dataset);
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
-			Collections.sort(fragment.getMeasurements());
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				if (i % n == 0) {
 					fragment.getMeasurements().remove(j);
@@ -60,10 +57,8 @@ public class DataUserSimulator {
 	
 	public static void attackDatasetByRounding(String datasetName, String newDatasetName, int decimalDigits) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
-		Collections.sort(dataset);
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
-			Collections.sort(fragment.getMeasurements());
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				BigDecimal roundedValue = fragment.getMeasurements().get(j).getValue().setScale(decimalDigits,
 						RoundingMode.HALF_UP);
@@ -77,10 +72,8 @@ public class DataUserSimulator {
 	public static void attackDatasetbyRandom(String datasetName, String newDatasetName, Double maxError) {
 		Random random = new Random();
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
-		Collections.sort(dataset);
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
-			Collections.sort(fragment.getMeasurements());
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				BigDecimal randomValue = BigDecimal.valueOf(random.nextDouble()).multiply(BigDecimal.valueOf(0.5));
 				BigDecimal newValue = fragment.getMeasurements().get(j).getValue();
@@ -98,10 +91,8 @@ public class DataUserSimulator {
 
 	public static void attackDatasetbySubset(String datasetName, String newDatasetName, int startIndex, int endIndex) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
-		Collections.sort(dataset);
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
-			Collections.sort(fragment.getMeasurements());
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				if (j < startIndex || j > endIndex) {
 					fragment.getMeasurements().remove(j);

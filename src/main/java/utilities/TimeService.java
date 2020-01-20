@@ -2,12 +2,12 @@ package utilities;
 
 import java.util.concurrent.TimeUnit;
 
-public class StopwatchService {
+public class TimeService {
 
 	private long startTime;
 	private long endTime;
 	
-	public StopwatchService() {
+	public TimeService() {
 		startTime = System.nanoTime();
 	}
 	

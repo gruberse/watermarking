@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import entities.Fragment;
@@ -13,66 +12,69 @@ import entities.UsabilityConstraint;
 import utilities.DatabaseService;
 import utilities.FileService;
 import utilities.LogService;
-import utilities.StopwatchService;
-import utilities.WatermarkGenerationService;
+import utilities.TimeService;
+import utilities.WatermarkService;
 
 public class DataService {
 
-	public static void getDataset(String datasetName, int dataUserId, String deviceId, String type, String unit,
+	public static void requestDataset(String datasetName, int dataUserId, String deviceId, String type, String unit,
 			LocalDate from, LocalDate to) {
 		
 		// retrieve fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
-		StopwatchService stopwatchService = new StopwatchService();
+		TimeService timeService = new TimeService();
 		List<Fragment> fragments = DatabaseService.getFragments(deviceId, type, unit, from, to);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", timeService.getTime());
 
-		// watermark fragments
+		// watermark embedding
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
-		stopwatchService = new StopwatchService();
+		timeService = new TimeService();
 		fragments = watermarkEmbedding(dataUserId, fragments);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", timeService.getTime());
 		
 		// write to file system
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset");
-		stopwatchService = new StopwatchService();
+		timeService = new TimeService();
 		FileService.writeDataset(datasetName, fragments);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", timeService.getTime());
 	}
 
-	public static void getDataset(String datasetName, int dataUserId, int noOfDevices, String type, String unit,
+	public static void requestDataset(String datasetName, int dataUserId, int noOfDevices, String type, String unit,
 			LocalDate from, LocalDate to) {
 		
 		// retrieve fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
-		StopwatchService stopwatchService = new StopwatchService();
+		TimeService timeService = new TimeService();
 		List<Fragment> fragments = DatabaseService.getFragments(noOfDevices, type, unit, from, to);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", timeService.getTime());
 
-		// watermark fragments
+		// watermark embedding
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
-		stopwatchService = new StopwatchService();
+		timeService = new TimeService();
 		fragments = watermarkEmbedding(dataUserId, fragments);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", timeService.getTime());
 		
 		// write to file system
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset");
-		stopwatchService = new StopwatchService();
+		timeService = new TimeService();
 		FileService.writeDataset(datasetName, fragments);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", timeService.getTime());
 	}
 
 	private static List<Fragment> watermarkEmbedding(int dataUserId, List<Fragment> fragments) {
 		LocalDateTime timestamp = LocalDateTime.now();
 
-		Collections.sort(fragments);
 		for (int i = 0; i < fragments.size(); i++) {
+			
+			LogService.log(LogService.METHOD_LEVEL, "watermarkEmbedding", "fragmentWatermarking");
+			TimeService timeService = new TimeService();
+			
 			Fragment fragment = fragments.get(i);
 
 			// retrieve usability constraint
@@ -117,7 +119,7 @@ public class DataService {
 					fragment.getUnit(), fragment.getDate().minusDays(1));
 			Fragment nextFragment = DatabaseService.getFragment(fragment.getDeviceId(), fragment.getType(),
 					fragment.getUnit(), fragment.getDate().plusDays(1));
-			watermark = WatermarkGenerationService.generateWatermark(request, usabilityConstraint, fragment,
+			watermark = WatermarkService.generateWatermark(request, usabilityConstraint, fragment,
 					prevFragment, nextFragment);
 
 			// embed generated watermark
@@ -129,8 +131,12 @@ public class DataService {
 				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
 				// ","));
 			}
+			
 			// update watermarked fragment
 			fragments.set(i, fragment);
+
+			timeService.stop();
+			LogService.log(LogService.METHOD_LEVEL, "watermarkEmbedding", "fragment", timeService.getTime());
 		}
 		return fragments;
 	}

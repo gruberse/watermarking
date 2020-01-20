@@ -13,7 +13,7 @@ import entities.Range;
 import entities.Request;
 import entities.UsabilityConstraint;
 
-public class WatermarkGenerationService {
+public class WatermarkService {
 
 	public static BigDecimal[] generateWatermark(Request request, UsabilityConstraint usabilityConstraint,
 			Fragment fragment, Fragment prevFragment, Fragment nextFragment) {

@@ -56,6 +56,8 @@ public class FragmentationService {
 					fragments.add(fragment);
 				}
 			}
+			
+			Collections.sort(fragments);
 			for (Fragment fragment : fragments) {
 				Collections.sort(fragment.getMeasurements());
 			}

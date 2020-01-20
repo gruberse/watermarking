@@ -7,31 +7,31 @@ import entities.Fragment;
 import utilities.DatabaseService;
 import utilities.FragmentationService;
 import utilities.LogService;
-import utilities.StopwatchService;
+import utilities.TimeService;
 
 public class ContainerService {
 
-	public static void uploadDataset(String datasetName) {
+	public static void storeDataset(String datasetName) {
 		// retrieve fragments
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "FragmentationService.getFragments");
-		StopwatchService stopwatchService = new StopwatchService();
+		TimeService timeService = new TimeService();
 		List<Fragment> fragments = FragmentationService.getFragments(datasetName);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "FragmentationService.getFragments", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "FragmentationService.getFragments", timeService.getTime());
 		
 		// complete fragments
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKey");
-		stopwatchService = new StopwatchService();
+		timeService = new TimeService();
 		fragments = generateSecretKey(fragments);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKey", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKey", timeService.getTime());
 		
 		// insert fragments
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "DatabaseService.insertFragments");
-		stopwatchService = new StopwatchService();
+		timeService = new TimeService();
 		DatabaseService.insertFragments(fragments);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "DatabaseService.insertFragments", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "DatabaseService.insertFragments", timeService.getTime());
 	}
 	
 	private static List<Fragment> generateSecretKey(List<Fragment> fragments) {

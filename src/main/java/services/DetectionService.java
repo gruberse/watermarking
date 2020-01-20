@@ -18,37 +18,37 @@ import utilities.DatabaseService;
 import utilities.FileService;
 import utilities.FragmentationService;
 import utilities.LogService;
-import utilities.StopwatchService;
-import utilities.WatermarkGenerationService;
+import utilities.TimeService;
+import utilities.WatermarkService;
 
 public class DetectionService {
 
-	public static void getReport(String datasetName, String reportName, BigDecimal fragmentSimilarityThreshold,
+	public static void detectLeakage(String datasetName, String reportName, BigDecimal fragmentSimilarityThreshold,
 			BigDecimal watermarkSimilarityThreshold) {
 
 		// get suspicious fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "FragmentationService.getFragments");
-		StopwatchService stopwatchService = new StopwatchService();
+		TimeService timeService = new TimeService();
 		List<Fragment> suspiciousFragments = FragmentationService.getFragments(datasetName);
-		stopwatchService.stop();
+		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "FragmentationService.getFragments",
-				stopwatchService.getTime());
+				timeService.getTime());
 
 		// watermark detection
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "watermarkDetection");
-		stopwatchService = new StopwatchService();
+		timeService = new TimeService();
 		String report = watermarkDetection(suspiciousFragments, fragmentSimilarityThreshold,
 				watermarkSimilarityThreshold);
-		stopwatchService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "watermarkDetection", stopwatchService.getTime());
+		timeService.stop();
+		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "watermarkDetection", timeService.getTime());
 
 		// write to file system
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "FileService.writeFile");
-		stopwatchService = new StopwatchService();
+		timeService = new TimeService();
 		FileService.writeFile(reportName, report);
-		stopwatchService.stop();
+		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "FileService.writeFile",
-				stopwatchService.getTime());
+				timeService.getTime());
 	}
 
 	private static String watermarkDetection(List<Fragment> suspiciousFragments, BigDecimal fragmentSimilarityThreshold,
@@ -64,6 +64,10 @@ public class DetectionService {
 		// similarity search for each suspicious fragment
 		Collections.sort(suspiciousFragments);
 		for (int i = 0; i < suspiciousFragments.size(); i++) {
+			
+			LogService.log(LogService.METHOD_LEVEL, "watermarkDetection", "fragmentSimilaritySearch");
+			TimeService timeService = new TimeService();
+			
 			report = report + "\n[" + (i + 1) + "] suspicious fragment";
 			Fragment suspiciousFragment = suspiciousFragments.get(i);
 			Collections.sort(suspiciousFragment.getMeasurements());
@@ -87,7 +91,6 @@ public class DetectionService {
 					suspiciousFragment.getMin().subtract(usabilityConstraint.getMaximumError()),
 					suspiciousFragment.getMax().add(usabilityConstraint.getMaximumError()))) {
 
-				Collections.sort(fragment.getMeasurements());
 				HashMap<Integer, Integer> sequence = getSequence(suspiciousFragment, fragment, usabilityConstraint);
 
 				if (sequence.size() == suspiciousFragment.getMeasurements().size()) {
@@ -101,6 +104,9 @@ public class DetectionService {
 					}
 				}
 			}
+			
+			timeService.stop();
+			LogService.log(LogService.METHOD_LEVEL, "watermarkDetection", "fragmentSimilaritySearch", timeService.getTime());
 
 			if (matchingFragmentSimilarity.compareTo(fragmentSimilarityThreshold) >= 0) {
 
@@ -110,6 +116,9 @@ public class DetectionService {
 				report = report + "\t" + matchingFragment.getDate();
 				report = report + "\nmatching fragment similarity:\t" + matchingFragmentSimilarity;
 
+				LogService.log(LogService.METHOD_LEVEL, "watermarkDetection", "watermarkSimilaritySearch");
+				timeService = new TimeService();
+				
 				// extract (noisy) watermark
 				BigDecimal[] noisyWatermark = getEmbeddedWatermark(suspiciousFragment, matchingFragment,
 						matchingSequence);
@@ -129,7 +138,7 @@ public class DetectionService {
 
 				// watermark similarity search
 				for (Request request : requests) {
-					BigDecimal[] watermark = WatermarkGenerationService.generateWatermark(request, usabilityConstraint,
+					BigDecimal[] watermark = WatermarkService.generateWatermark(request, usabilityConstraint,
 							matchingFragment, prevFragment, nextFragment);
 
 					BigDecimal watermarkSimilarity = getWatermarkSimilarity(noisyWatermark, watermark,
@@ -141,6 +150,9 @@ public class DetectionService {
 						fragmentLeakers.add(leaker);
 					}
 				}
+				
+				timeService.stop();
+				LogService.log(LogService.METHOD_LEVEL, "watermarkDetection", "watermarkSimilaritySearch", timeService.getTime());
 
 				if (fragmentLeakers.size() > 0) {
 					Collections.sort(fragmentLeakers);

@@ -20,6 +20,7 @@ public class Controller {
 			DatabaseService.deleteTable("request");
 			DatabaseService.deleteTable("usability_constraint");
 			FileService.deleteFiles("dataset");
+			LogService.delete();
 
 			DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(0.5, 256, 10));
 

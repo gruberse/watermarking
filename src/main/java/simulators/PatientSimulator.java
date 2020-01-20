@@ -12,7 +12,7 @@ import entities.Measurement;
 import services.ContainerService;
 import utilities.FileService;
 import utilities.LogService;
-import utilities.StopwatchService;
+import utilities.TimeService;
 
 public class PatientSimulator {
 
@@ -23,13 +23,13 @@ public class PatientSimulator {
 	public static void storeDataset(String datasetName) {
 		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(datasetName=" + datasetName + ")");
 
-		StopwatchService stopwatchService = new StopwatchService();
-		ContainerService.uploadDataset(datasetName);
-		stopwatchService.stop();
+		TimeService timeService = new TimeService();
+		ContainerService.storeDataset(datasetName);
+		timeService.stop();
 
-		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset", stopwatchService.getTime());
+		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset", timeService.getTime());
 	}
-
+	
 	public static void generateDataset(String datasetName, String deviceId, String from, String to) {
 		List<Fragment> dataset = new LinkedList<>();
 		Random random = new Random();
@@ -100,4 +100,5 @@ public class PatientSimulator {
 		}
 		FileService.writeDataset(datasetName, dataset);
 	}
+	
 }

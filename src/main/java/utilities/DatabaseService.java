@@ -11,6 +11,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -131,6 +132,7 @@ public class DatabaseService {
 				Fragment fragment = new Fragment(deviceId, type, unit,
 						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"));
 				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
+				Collections.sort(fragment.getMeasurements());
 				return fragment;
 			}
 
@@ -165,6 +167,7 @@ public class DatabaseService {
 				Fragment fragment = new Fragment(deviceId, type, unit,
 						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"));
 				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
+				Collections.sort(fragment.getMeasurements());
 				fragments.add(fragment);
 			}
 
@@ -174,6 +177,8 @@ public class DatabaseService {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
+		Collections.sort(fragments);
 		return fragments;
 	}
 	
@@ -196,6 +201,7 @@ public class DatabaseService {
 				Fragment fragment = new Fragment(resultSet.getString("device_id"), type, unit,
 						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"));
 				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
+				Collections.sort(fragment.getMeasurements());
 				fragments.add(fragment);
 			}
 
@@ -205,6 +211,8 @@ public class DatabaseService {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
+		Collections.sort(fragments);
 		return fragments;
 	}
 
@@ -330,6 +338,7 @@ public class DatabaseService {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return requests;
 	}
 	

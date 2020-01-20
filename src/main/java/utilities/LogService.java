@@ -7,6 +7,7 @@ public class LogService {
 
 	public static String SIMULATOR_LEVEL = "\t";
 	public static String SERVICE_LEVEL = "\t\t";
+	public static String METHOD_LEVEL = "\t\t\t";
 	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	private static final String logName = "0_log.txt";
 
@@ -19,7 +20,7 @@ public class LogService {
 		FileService.writeLine(logName, LocalDateTime.now().format(formatter) + level + "[" + className + "]\t"
 				+ operation + ": " + seconds + "sec.");
 		if (level.contentEquals(SIMULATOR_LEVEL)) {
-			FileService.writeLine(logName, "\n");
+			FileService.writeLine(logName, "");
 		}
 	}
 

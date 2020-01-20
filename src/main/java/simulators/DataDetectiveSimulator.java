@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 import services.DetectionService;
 import utilities.LogService;
-import utilities.StopwatchService;
+import utilities.TimeService;
 
 public class DataDetectiveSimulator {
 
@@ -15,11 +15,11 @@ public class DataDetectiveSimulator {
 						+ ", fragmentSimilarityThreshold=" + fragmentSimilarityThreshold
 						+ ", watermarkSimilarityThreshold=" + watermarkSimilarityThreshold + ")");
 		
-		StopwatchService stopwatchService = new StopwatchService();
-		DetectionService.getReport(datasetName, reportName, BigDecimal.valueOf(fragmentSimilarityThreshold),
+		TimeService timeService = new TimeService();
+		DetectionService.detectLeakage(datasetName, reportName, BigDecimal.valueOf(fragmentSimilarityThreshold),
 				BigDecimal.valueOf(watermarkSimilarityThreshold));
-		stopwatchService.stop();
+		timeService.stop();
 		
-		LogService.log(LogService.SIMULATOR_LEVEL, "DataDetectiveSimulator", "detectLeakage", stopwatchService.getTime());
+		LogService.log(LogService.SIMULATOR_LEVEL, "DataDetectiveSimulator", "detectLeakage", timeService.getTime());
 	}
 }
