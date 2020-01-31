@@ -136,7 +136,10 @@ public class DataService {
 			fragments.set(i, fragment);
 
 			timeService.stop();
-			LogService.log(LogService.METHOD_LEVEL, "watermarkEmbedding", "fragment", timeService.getTime());
+			LogService.log(
+					LogService.METHOD_LEVEL, "watermarkEmbedding", "fragment<" + fragment.getDeviceId() + ", "
+							+ fragment.getType() + ", " + fragment.getUnit() + ", " + fragment.getDate() + ">",
+					timeService.getTime());
 		}
 		return fragments;
 	}

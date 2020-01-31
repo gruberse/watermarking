@@ -26,7 +26,7 @@ public class FileService {
 	
 	public static void writeLine(String fileName, String line) {
 		try (BufferedWriter out = new BufferedWriter(new FileWriter(FileService.FOLDER + fileName, true))) {
-			out.write("\n" + line);
+			out.write(line + "\n");
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}

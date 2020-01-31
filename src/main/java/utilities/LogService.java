@@ -13,7 +13,6 @@ public class LogService {
 	
 	public static void log(String message) {
 		FileService.writeLine(logName, message);
-		FileService.writeLine(logName, "");
 	}
 
 	public static void log(String level, String className, String operation) {

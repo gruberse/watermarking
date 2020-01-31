@@ -69,9 +69,9 @@ public class DetectionService {
 		for (int i = 0; i < suspiciousFragments.size(); i++) {
 			Fragment suspiciousFragment = suspiciousFragments.get(i);
 
-			LogService.log(LogService.METHOD_LEVEL, "watermarkDetection",
-					"suspiciousFragment<" + suspiciousFragment.getDeviceId() + ", " + suspiciousFragment.getType()
-							+ ", " + suspiciousFragment.getUnit() + ", " + suspiciousFragment.getDate() + ">");
+			LogService.log(LogService.METHOD_LEVEL, "watermark detection",
+					"fragment<" + suspiciousFragment.getDeviceId() + ", " + suspiciousFragment.getType() + ", "
+							+ suspiciousFragment.getUnit() + ", " + suspiciousFragment.getDate() + ">");
 			TimeService timeService = new TimeService();
 
 			report = report + "\n[" + (i + 1) + "] fragment leakage";
@@ -110,9 +110,6 @@ public class DetectionService {
 				}
 			}
 
-			timeService.stop();
-			LogService.log(LogService.METHOD_LEVEL, "watermarkDetection", "suspiciousFragment", timeService.getTime());
-
 			if (matchingFragmentSimilarity.compareTo(fragmentSimilarityThreshold) >= 0) {
 
 				report = report + "\nmatching original fragment:\t\t" + matchingFragment.getDeviceId();
@@ -120,9 +117,6 @@ public class DetectionService {
 				report = report + "\t" + matchingFragment.getUnit();
 				report = report + "\t" + matchingFragment.getDate();
 				report = report + "\nmatching fragment similarity:\t" + matchingFragmentSimilarity;
-
-				LogService.log(LogService.METHOD_LEVEL, "suspiciousFragment", "suspiciousWatermark<");
-				timeService = new TimeService();
 
 				// extract (noisy) watermark
 				BigDecimal[] noisyWatermark = extractWatermark(suspiciousFragment, matchingFragment, matchingSequence);
@@ -162,10 +156,6 @@ public class DetectionService {
 					}
 				}
 
-				timeService.stop();
-				LogService.log(LogService.METHOD_LEVEL, "suspiciousFragment", "suspiciousWatermark",
-						timeService.getTime());
-
 				if (fragmentLeakers.size() > 0) {
 					Collections.sort(fragmentLeakers);
 					report = report + "\nmatching watermarks: ";
@@ -179,12 +169,19 @@ public class DetectionService {
 			} else {
 				report = report + "\nno matching fragment detected";
 			}
+
+			timeService.stop();
+			LogService.log(LogService.METHOD_LEVEL, "watermark detection",
+					"fragment<" + suspiciousFragment.getDeviceId() + ", " + suspiciousFragment.getType() + ", "
+							+ suspiciousFragment.getUnit() + ", " + suspiciousFragment.getDate() + ">",
+					timeService.getTime());
 		}
 
 		// compute dataset leakage
 		for (int i = 0; i < datasetLeakers.size(); i++) {
 			DataLeaker leaker = datasetLeakers.get(i);
-			leaker.setProbability(leaker.getProbability().divide(BigDecimal.valueOf(suspiciousFragments.size()), 5, RoundingMode.HALF_UP));
+			leaker.setProbability(leaker.getProbability().divide(BigDecimal.valueOf(suspiciousFragments.size()), 5,
+					RoundingMode.HALF_UP));
 			datasetLeakers.get(i).setProbability(leaker.getProbability());
 		}
 
@@ -312,7 +309,7 @@ public class DetectionService {
 				for (int j = 0; j < watermark.length; j++) {
 					watermark[j] = watermark[j].divide(BigDecimal.valueOf(dataUsers.size()), RoundingMode.HALF_UP);
 				}
-				
+
 				fragmentLeakers.add(new DataLeaker(dataUsers, watermark));
 			}
 		}

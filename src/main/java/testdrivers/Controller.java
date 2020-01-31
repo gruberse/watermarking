@@ -1,5 +1,6 @@
 package testdrivers;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,6 +34,12 @@ public class Controller {
 					"2017-02-04");
 			DataDetectiveSimulator.detectLeakage("requested_dataset_1.json", "requested_dataset_1_report.txt", 0.8,
 					0.8);
+
+			DataUserSimulator.attackDatasetByCollusion(
+					Arrays.asList("requested_dataset_2.json", "requested_dataset_3.json"),
+					"attacked_dataset_collusion_1.json");
+			DataDetectiveSimulator.detectLeakage("attacked_dataset_collusion_1.json",
+					"attacked_dataset_collusion_1_report.txt", 0.8, 0.9);
 		} else {
 
 			FileService.FOLDER = "C:/temp/files/";
