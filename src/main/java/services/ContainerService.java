@@ -22,9 +22,9 @@ public class ContainerService {
 		// complete fragments
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKey");
 		timeService = new TimeService();
-		fragments = generateSecretKey(fragments);
+		fragments = generateSecretKeys(fragments);
 		timeService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKey", timeService.getTime());
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKeys", timeService.getTime());
 		
 		// insert fragments
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "DatabaseService.insertFragments");
@@ -34,7 +34,7 @@ public class ContainerService {
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "DatabaseService.insertFragments", timeService.getTime());
 	}
 	
-	private static List<Fragment> generateSecretKey(List<Fragment> fragments) {
+	private static List<Fragment> generateSecretKeys(List<Fragment> fragments) {
 		Random random = new Random();
 		Long min = Long.MIN_VALUE;
 		Long max = Long.MAX_VALUE - Long.valueOf(Integer.MAX_VALUE);

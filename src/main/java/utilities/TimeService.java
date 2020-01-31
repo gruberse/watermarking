@@ -16,6 +16,6 @@ public class TimeService {
 	}
 	
 	public Long getTime() {
-		return TimeUnit.SECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS);
+		return TimeUnit.MILLISECONDS.convert(endTime - startTime, TimeUnit.NANOSECONDS);
 	}
 }

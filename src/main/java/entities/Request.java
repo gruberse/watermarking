@@ -7,17 +7,17 @@ import java.util.ArrayList;
 public class Request {
 
 	private String deviceId;
-	private Integer dataUserId;
+	private int dataUser;
 	private String type;
 	private String unit;
 	private LocalDate date;
 	private int numberOfWatermark;
 	private ArrayList<LocalDateTime> timestamps;
 	
-	public Request(String deviceId, Integer dataUserId, String type, String unit, LocalDate date, int numberOfWatermark, ArrayList<LocalDateTime> timestamps) {
+	public Request(String deviceId, int dataUser, String type, String unit, LocalDate date, int numberOfWatermark, ArrayList<LocalDateTime> timestamps) {
 		super();
 		this.deviceId = deviceId;
-		this.dataUserId = dataUserId;
+		this.dataUser = dataUser;
 		this.type = type;
 		this.unit = unit;
 		this.date = date;
@@ -27,7 +27,7 @@ public class Request {
 	
 	@Override
 	public String toString() {
-		return "Request [deviceId=" + deviceId + ", dataUserId=" + dataUserId + ", type=" + type + ", unit=" + unit
+		return "Request [deviceId=" + deviceId + ", dataUser=" + dataUser + ", type=" + type + ", unit=" + unit
 				+ ", date=" + date + ", numberOfWatermark=" + numberOfWatermark + ", timestamps=" + timestamps + "]";
 	}
 
@@ -39,12 +39,12 @@ public class Request {
 		this.deviceId = deviceId;
 	}
 
-	public Integer getDataUserId() {
-		return dataUserId;
+	public int getDataUser() {
+		return dataUser;
 	}
 
-	public void setDataUserId(Integer dataUserId) {
-		this.dataUserId = dataUserId;
+	public void setDataUser(int dataUser) {
+		this.dataUser = dataUser;
 	}
 
 	public String getType() {

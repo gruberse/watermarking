@@ -29,6 +29,8 @@ public class Controller {
 					"2017-02-05");
 			DataUserSimulator.requestDataset("requested_dataset_2.json", 2, "DexG5MobRec_SM64305440", "2017-02-04",
 					"2017-02-04");
+			DataUserSimulator.requestDataset("requested_dataset_3.json", 3, "DexG5MobRec_SM64305440", "2017-02-04",
+					"2017-02-04");
 			DataDetectiveSimulator.detectLeakage("requested_dataset_1.json", "requested_dataset_1_report.txt", 0.8,
 					0.8);
 		} else {
@@ -41,6 +43,9 @@ public class Controller {
 				System.out.println("-reset -table usability_constraint");
 				System.out.println("-reset -files [term]");
 				System.out.println("-reset -log");
+				System.out.println("");
+				System.out.println("-log -section");
+				System.out.println("-log -message [message]");
 				System.out.println("");
 				System.out.println("-set -usability_constraint [maximumError] [numberOfWatermarks] [numberOfRanges]");
 				System.out.println("");
@@ -59,7 +64,8 @@ public class Controller {
 				System.out.println("-attack -collusion [datasetName1] ... [datasetNameN] [newDatasetName]");
 				System.out.println("");
 				System.out.println("---DataDetectiveSimulator---");
-				System.out.println("-detect [datasetName] [reportName] [fragmentSimilarityThreshold] [watermarkSimilarityThreshold]");
+				System.out.println(
+						"-detect [datasetName] [reportName] [fragmentSimilarityThreshold] [watermarkSimilarityThreshold]");
 			}
 
 			else {
@@ -72,6 +78,21 @@ public class Controller {
 					}
 					if (args[1].contentEquals("-log")) {
 						LogService.delete();
+					}
+				}
+				if (args[0].contentEquals("-log")) {
+					if (args[1].contentEquals("-section")) {
+						LogService.log("----------------------------------------------------");
+					}
+					if (args[1].contentEquals("-message")) {
+						String message = "";
+						for (int i = 2; i < args.length; i++) {
+							message = message + args[i];
+							if (i + 1 < args.length) {
+								message = message + " ";
+							}
+						}
+						LogService.log(message);
 					}
 				}
 				if (args[0].contentEquals("-set")) {

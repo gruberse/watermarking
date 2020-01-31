@@ -252,12 +252,12 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "INSERT INTO request (device_id, data_user_id, type, unit, date, number_of_watermark, timestamps) "
+			String sql = "INSERT INTO request (device_id, data_user, type, unit, date, number_of_watermark, timestamps) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, request.getDeviceId());
-			preparedStatement.setInt(2, request.getDataUserId());
+			preparedStatement.setInt(2, request.getDataUser());
 			preparedStatement.setString(3, request.getType());
 			preparedStatement.setString(4, request.getUnit());
 			preparedStatement.setDate(5, Date.valueOf(request.getDate()));
@@ -272,17 +272,17 @@ public class DatabaseService {
 		}
 	}
 
-	public static Request getRequest(int dataUserId, String deviceId, String type, String unit,
+	public static Request getRequest(int dataUser, String deviceId, String type, String unit,
 			LocalDate date) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT number_of_watermark, timestamps FROM request WHERE device_id = ? AND data_user_id = ? AND type = ? "
+			String sql = "SELECT number_of_watermark, timestamps FROM request WHERE device_id = ? AND data_user = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, deviceId);
-			preparedStatement.setInt(2, dataUserId);
+			preparedStatement.setInt(2, dataUser);
 			preparedStatement.setString(3, type);
 			preparedStatement.setString(4, unit);
 			preparedStatement.setDate(5, Date.valueOf(date));
@@ -294,7 +294,7 @@ public class DatabaseService {
 				for (int i = 0; i < timestampArray.length; i++) {
 					timestamps.add(timestampArray[i].toLocalDateTime());
 				}
-				return new Request(deviceId, dataUserId, type, unit, date,
+				return new Request(deviceId, dataUser, type, unit, date,
 						resultSet.getInt("number_of_watermark"), timestamps);
 			}
 
@@ -312,7 +312,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT data_user_id, number_of_watermark, timestamps FROM request "
+			String sql = "SELECT data_user, number_of_watermark, timestamps FROM request "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -328,7 +328,7 @@ public class DatabaseService {
 				for (int i = 0; i < timestampArray.length; i++) {
 					timestamps.add(timestampArray[i].toLocalDateTime());
 				}
-				requests.add(new Request(deviceId, resultSet.getInt("data_user_id"), type, unit, date,
+				requests.add(new Request(deviceId, resultSet.getInt("data_user"), type, unit, date,
 						resultSet.getInt("number_of_watermark"), timestamps));
 			}
 
@@ -346,13 +346,13 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "UPDATE request SET timestamps = ? WHERE device_id = ? AND data_user_id = ? AND type = ? "
+			String sql = "UPDATE request SET timestamps = ? WHERE device_id = ? AND data_user = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 			
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setArray(1, connection.createArrayOf("timestamp", request.getTimestamps().toArray()));
 			preparedStatement.setString(2, request.getDeviceId());
-			preparedStatement.setInt(3, request.getDataUserId());
+			preparedStatement.setInt(3, request.getDataUser());
 			preparedStatement.setString(4, request.getType());
 			preparedStatement.setString(5, request.getUnit());
 			preparedStatement.setDate(6, Date.valueOf(request.getDate()));

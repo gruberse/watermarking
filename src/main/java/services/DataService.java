@@ -17,9 +17,9 @@ import utilities.WatermarkService;
 
 public class DataService {
 
-	public static void requestDataset(String datasetName, int dataUserId, String deviceId, String type, String unit,
+	public static void requestDataset(String datasetName, int dataUser, String deviceId, String type, String unit,
 			LocalDate from, LocalDate to) {
-		
+
 		// retrieve fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
 		TimeService timeService = new TimeService();
@@ -30,10 +30,10 @@ public class DataService {
 		// watermark embedding
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
 		timeService = new TimeService();
-		fragments = watermarkEmbedding(dataUserId, fragments);
+		fragments = embedWatermarks(dataUser, fragments);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", timeService.getTime());
-		
+
 		// write to file system
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset");
 		timeService = new TimeService();
@@ -42,9 +42,9 @@ public class DataService {
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", timeService.getTime());
 	}
 
-	public static void requestDataset(String datasetName, int dataUserId, int noOfDevices, String type, String unit,
+	public static void requestDataset(String datasetName, int dataUser, int noOfDevices, String type, String unit,
 			LocalDate from, LocalDate to) {
-		
+
 		// retrieve fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
 		TimeService timeService = new TimeService();
@@ -55,10 +55,10 @@ public class DataService {
 		// watermark embedding
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
 		timeService = new TimeService();
-		fragments = watermarkEmbedding(dataUserId, fragments);
+		fragments = embedWatermarks(dataUser, fragments);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", timeService.getTime());
-		
+
 		// write to file system
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset");
 		timeService = new TimeService();
@@ -67,22 +67,22 @@ public class DataService {
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", timeService.getTime());
 	}
 
-	private static List<Fragment> watermarkEmbedding(int dataUserId, List<Fragment> fragments) {
+	private static List<Fragment> embedWatermarks(int dataUser, List<Fragment> fragments) {
 		LocalDateTime timestamp = LocalDateTime.now();
 
 		for (int i = 0; i < fragments.size(); i++) {
-			
-			LogService.log(LogService.METHOD_LEVEL, "watermarkEmbedding", "fragmentWatermarking");
-			TimeService timeService = new TimeService();
-			
 			Fragment fragment = fragments.get(i);
+
+			LogService.log(LogService.METHOD_LEVEL, "watermarkEmbedding", "fragment<" + fragment.getDeviceId() + ", "
+					+ fragment.getType() + ", " + fragment.getUnit() + ", " + fragment.getDate() + ">");
+			TimeService timeService = new TimeService();
 
 			// retrieve usability constraint
 			UsabilityConstraint usabilityConstraint = DatabaseService.getUsabilityConstraint(fragment.getType(),
 					fragment.getUnit());
 
 			// retrieve number of watermark from database
-			Request request = DatabaseService.getRequest(dataUserId, fragment.getDeviceId(), fragment.getType(),
+			Request request = DatabaseService.getRequest(dataUser, fragment.getDeviceId(), fragment.getType(),
 					fragment.getUnit(), fragment.getDate());
 
 			// data user has not requested fragment yet
@@ -99,7 +99,7 @@ public class DataService {
 				ArrayList<LocalDateTime> timestamps = new ArrayList<>();
 				timestamps.add(timestamp);
 
-				request = new Request(fragment.getDeviceId(), dataUserId, fragment.getType(), fragment.getUnit(),
+				request = new Request(fragment.getDeviceId(), dataUser, fragment.getType(), fragment.getUnit(),
 						fragment.getDate(), numberOfWatermark, timestamps);
 
 				// insert new request
@@ -119,8 +119,8 @@ public class DataService {
 					fragment.getUnit(), fragment.getDate().minusDays(1));
 			Fragment nextFragment = DatabaseService.getFragment(fragment.getDeviceId(), fragment.getType(),
 					fragment.getUnit(), fragment.getDate().plusDays(1));
-			watermark = WatermarkService.generateWatermark(request, usabilityConstraint, fragment,
-					prevFragment, nextFragment);
+			watermark = WatermarkService.generateWatermark(request, usabilityConstraint, fragment, prevFragment,
+					nextFragment);
 
 			// embed generated watermark
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
@@ -131,7 +131,7 @@ public class DataService {
 				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
 				// ","));
 			}
-			
+
 			// update watermarked fragment
 			fragments.set(i, fragment);
 

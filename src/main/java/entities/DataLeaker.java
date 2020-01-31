@@ -1,23 +1,30 @@
 package entities;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class DataLeaker implements Comparable<DataLeaker> {
 
 	private BigDecimal probability;
-	private Integer dataUserId;
+	private List<Integer> dataUsers;
+	private BigDecimal[] watermark;
 	
 	public DataLeaker() {
 	}
-
-	public DataLeaker(BigDecimal probability, Integer dataUserId) {
+	
+	public DataLeaker(BigDecimal probability, List<Integer> dataUsers) {
 		this.probability = probability;
-		this.dataUserId = dataUserId;
+		this.dataUsers = dataUsers;
+	}
+	
+	public DataLeaker(List<Integer> dataUsers, BigDecimal[] watermark) {
+		this.dataUsers = dataUsers;
+		this.watermark = watermark;
 	}
 	
 	@Override
 	public String toString() {
-		return "data user: " + dataUserId + ", probability: " + probability;
+		return "probability: " + probability + "\tdata users: " + dataUsers.toString();
 	}
 	
 	@Override
@@ -27,7 +34,7 @@ public class DataLeaker implements Comparable<DataLeaker> {
 		}
 		return o.getProbability().compareTo(getProbability());
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -37,10 +44,10 @@ public class DataLeaker implements Comparable<DataLeaker> {
 		if (getClass() != obj.getClass())
 			return false;
 		DataLeaker other = (DataLeaker) obj;
-		if (dataUserId == null) {
-			if (other.dataUserId != null)
+		if (dataUsers == null) {
+			if (other.dataUsers != null)
 				return false;
-		} else if (!dataUserId.equals(other.dataUserId))
+		} else if (!dataUsers.equals(other.dataUsers))
 			return false;
 		return true;
 	}
@@ -53,12 +60,19 @@ public class DataLeaker implements Comparable<DataLeaker> {
 		this.probability = probability;
 	}
 
-	public Integer getDataUserId() {
-		return dataUserId;
+	public List<Integer> getDataUsers() {
+		return dataUsers;
 	}
 
-	public void setDataUserId(Integer dataUserId) {
-		this.dataUserId = dataUserId;
+	public void setDataUsers(List<Integer> dataUsers) {
+		this.dataUsers = dataUsers;
 	}
 
+	public BigDecimal[] getWatermark() {
+		return watermark;
+	}
+
+	public void setWatermark(BigDecimal[] watermark) {
+		this.watermark = watermark;
+	}
 }
