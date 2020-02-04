@@ -26,20 +26,12 @@ public class Controller {
 			DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(0.5, 256, 10));
 
 			PatientSimulator.storeDataset();
-			DataUserSimulator.requestDataset("requested_dataset_1.json", 1, "DexG5MobRec_SM64305440", "2017-02-04",
-					"2017-02-05");
-			DataUserSimulator.requestDataset("requested_dataset_2.json", 2, "DexG5MobRec_SM64305440", "2017-02-04",
-					"2017-02-04");
-			DataUserSimulator.requestDataset("requested_dataset_3.json", 3, "DexG5MobRec_SM64305440", "2017-02-04",
-					"2017-02-04");
-			DataDetectiveSimulator.detectLeakage("requested_dataset_1.json", "requested_dataset_1_report.txt", 0.8,
-					0.8);
 
-			DataUserSimulator.attackDatasetByCollusion(
-					Arrays.asList("requested_dataset_2.json", "requested_dataset_3.json"),
-					"attacked_dataset_collusion_1.json");
-			DataDetectiveSimulator.detectLeakage("attacked_dataset_collusion_1.json",
-					"attacked_dataset_collusion_1_report.txt", 0.8, 0.9);
+			DataUserSimulator.requestDataset("requested_dataset.json", 1, "DexG5MobRec_SM64305440", "2017-02-04",
+					"2017-02-04");
+			DataUserSimulator.requestDataset("requested_dataset.json", 2, "DexG5MobRec_SM64305440", "2017-02-04",
+					"2017-02-04");
+			DataDetectiveSimulator.detectLeakage("requested_dataset.json", "requested_dataset_report.txt", 0.8, 0.8);
 		} else {
 
 			FileService.FOLDER = "C:/temp/files/";
@@ -64,9 +56,9 @@ public class Controller {
 				System.out.println("---DataUserSimulator---");
 				System.out.println("-request -patient [datasetName] [dataUserId] [deviceId] [from] [to]");
 				System.out.println("-request -patients [datasetName] [dataUserId] [noOfDevices] [from] [to]");
-				System.out.println("-attack -deletion [datasetName] [newDatasetName] [n]");
-				System.out.println("-attack -random [datasetName] [newDatasetName] [maxError]");
-				System.out.println("-attack -rounding [datasetName] [newDatasetName] [decimalDigits]");
+				System.out.println("-attack -deletion [datasetName] [newDatasetName] [frequency]");
+				System.out.println("-attack -random [datasetName] [newDatasetName] [maxError] [seed]");
+				System.out.println("-attack -rounding [datasetName] [newDatasetName] [decimalDigit]");
 				System.out.println("-attack -subset [datasetName] [newDatasetName] [startIndex] [endIndex]");
 				System.out.println("-attack -collusion [datasetName1] ... [datasetNameN] [newDatasetName]");
 				System.out.println("");
@@ -132,7 +124,7 @@ public class Controller {
 						DataUserSimulator.attackDatasetByDeletion(args[2], args[3], Integer.parseInt(args[4]));
 					}
 					if (args[1].contentEquals("-random")) {
-						DataUserSimulator.attackDatasetbyRandom(args[2], args[3], Double.parseDouble(args[4]));
+						DataUserSimulator.attackDatasetbyRandom(args[2], args[3], Double.parseDouble(args[4]), Long.parseLong(args[5]));
 					}
 					if (args[1].contentEquals("-rounding")) {
 						DataUserSimulator.attackDatasetByRounding(args[2], args[3], Integer.parseInt(args[4]));

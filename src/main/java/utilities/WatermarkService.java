@@ -26,9 +26,12 @@ public class WatermarkService {
 		List<BigDecimal> probabilities = new LinkedList<>();
 		for (int i = 0; i < usabilityConstraint.getNumberOfRanges() / 2; i++) {
 
-			BigDecimal probability = BigDecimal.valueOf(0.5)
-					.divide(BigDecimal.valueOf(2).pow((usabilityConstraint.getNumberOfRanges() / 2) - i));
-			if (i == 0) {
+			BigDecimal probability;
+			if (i > 0) {
+				probability = BigDecimal.valueOf(0.5)
+						.divide(BigDecimal.valueOf(2).pow((usabilityConstraint.getNumberOfRanges() / 2) - i));
+			}
+			else {
 				probability = BigDecimal.valueOf(0.5)
 						.divide(BigDecimal.valueOf(2).pow((usabilityConstraint.getNumberOfRanges() / 2) - (i + 1)));
 			}
@@ -152,7 +155,7 @@ public class WatermarkService {
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) < 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) == 0) {
 
-				if (upperBound.compareTo(prevMeasurement.getValue()) < 0) {
+				if (upperBound.compareTo(prevMeasurement.getValue()) > 0) {
 					upperBound = prevMeasurement.getValue();
 				}
 				lowerBound = nextMeasurement.getValue();
@@ -166,15 +169,15 @@ public class WatermarkService {
 
 			// compute ranges and range sizes
 			List<Range<BigDecimal>> ranges = new LinkedList<Range<BigDecimal>>();
-			
+
 			BigDecimal lowerRange = measurement.getValue().subtract(lowerBound);
 			BigDecimal upperRange = upperBound.subtract(measurement.getValue());
-			
+
 			BigDecimal lowerRangeSize = lowerRange
-					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2), 15, RoundingMode.DOWN);
+					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2), 15, RoundingMode.HALF_UP);
 			BigDecimal upperRangeSize = upperRange
-					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2), 15, RoundingMode.DOWN);
-			
+					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2), 15, RoundingMode.HALF_UP);
+
 			// compute final ranges and assign probabilities
 			for (int j = 0; j < (usabilityConstraint.getNumberOfRanges() / 2); j++) {
 
@@ -184,19 +187,18 @@ public class WatermarkService {
 
 				BigDecimal upperRangeMinimum = upperRange.subtract(upperRangeSize.multiply(BigDecimal.valueOf(j + 1)));
 				BigDecimal upperRangeMaximum = upperRange.subtract(upperRangeSize.multiply(BigDecimal.valueOf(j)));
-				
-				if(lowerRange.compareTo(BigDecimal.valueOf(0.0)) == 0) {
-					ranges.add(new Range<BigDecimal>(upperRangeMinimum, upperRangeMaximum, probabilities.get(j).add(probabilities.get(j))));
-				}
-				else if(upperRange.compareTo(BigDecimal.valueOf(0.0)) == 0) {
-					ranges.add(new Range<BigDecimal>(lowerRangeMinimum, lowerRangeMaximum, probabilities.get(j).add(probabilities.get(j))));
-				}
-				else {
+
+				if (lowerRange.compareTo(BigDecimal.valueOf(0.0)) == 0) {
+					ranges.add(new Range<BigDecimal>(upperRangeMinimum, upperRangeMaximum,
+							probabilities.get(j).add(probabilities.get(j))));
+				} else if (upperRange.compareTo(BigDecimal.valueOf(0.0)) == 0) {
+					ranges.add(new Range<BigDecimal>(lowerRangeMinimum, lowerRangeMaximum,
+							probabilities.get(j).add(probabilities.get(j))));
+				} else {
 					ranges.add(new Range<BigDecimal>(lowerRangeMinimum, lowerRangeMaximum, probabilities.get(j)));
 					ranges.add(new Range<BigDecimal>(upperRangeMinimum, upperRangeMaximum, probabilities.get(j)));
 				}
-				
-				
+
 			}
 			Collections.sort(ranges);
 
@@ -215,12 +217,13 @@ public class WatermarkService {
 
 			// compute mark: (min + (max - min) * random)
 			BigDecimal randomNumber4ValueSelection = BigDecimal.valueOf(random.nextDouble());
-			watermark[i] = selectedRange.getMinimum().add((selectedRange.getMaximum().subtract(selectedRange.getMinimum()))
+			watermark[i] = selectedRange.getMinimum()
+					.add((selectedRange.getMaximum().subtract(selectedRange.getMinimum()))
 							.multiply(randomNumber4ValueSelection));
 			watermark[i] = watermark[i].setScale(15, RoundingMode.HALF_UP);
-			//System.out.println(watermark[i].toString().replace(".", ","));
+			// System.out.println(watermark[i].toString().replace(".", ","));
 		}
-		
+
 		return watermark;
 	}
 }

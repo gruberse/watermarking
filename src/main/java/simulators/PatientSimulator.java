@@ -34,8 +34,8 @@ public class PatientSimulator {
 		List<Fragment> dataset = new LinkedList<>();
 		Random random = new Random();
 
-		int minute = random.nextInt(5);
-		int second = random.nextInt(60);
+		int minute = 0;
+		int second = 0;
 		BigDecimal value = BigDecimal.valueOf(random.nextDouble() * 22.5);
 
 		int sequenceLength = 0;

@@ -69,8 +69,8 @@ public class DataUserSimulator {
 		FileService.writeDataset(newDatasetName, dataset);
 	}
 
-	public static void attackDatasetbyRandom(String datasetName, String newDatasetName, Double maxError) {
-		Random random = new Random();
+	public static void attackDatasetbyRandom(String datasetName, String newDatasetName, Double maxError, Long seed) {
+		Random random = new Random(seed);
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);

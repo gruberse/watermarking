@@ -24,7 +24,7 @@ public class DataLeaker implements Comparable<DataLeaker> {
 	
 	@Override
 	public String toString() {
-		return "probability: " + probability + "\tdata users: " + dataUsers.toString();
+		return "probability: " + probability + "\tdata user: " + dataUsers.toString();
 	}
 	
 	@Override

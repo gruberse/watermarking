@@ -88,19 +88,21 @@ public class DataService {
 			// data user has not requested fragment yet
 			if (request == null) {
 
-				// retrieve next watermark number
-				int numberOfWatermark = 1 + DatabaseService.getNumberOfWatermark(fragment.getDeviceId(),
+				// retrieve request number
+				int numberOfFragmentRequest = 1 + DatabaseService.getNumberOfFragmentRequest(fragment.getDeviceId(),
 						fragment.getType(), fragment.getUnit(), fragment.getDate());
+				
 				// limit number of watermarks
-				if (numberOfWatermark > usabilityConstraint.getNumberOfWatermarks()) {
-					numberOfWatermark = numberOfWatermark % usabilityConstraint.getNumberOfWatermarks();
+				int numberOfWatermark = numberOfFragmentRequest % usabilityConstraint.getNumberOfWatermarks();
+				if (numberOfWatermark == 0) {
+					numberOfWatermark = usabilityConstraint.getNumberOfWatermarks();
 				}
-
+				
 				ArrayList<LocalDateTime> timestamps = new ArrayList<>();
 				timestamps.add(timestamp);
 
 				request = new Request(fragment.getDeviceId(), dataUser, fragment.getType(), fragment.getUnit(),
-						fragment.getDate(), numberOfWatermark, timestamps);
+						fragment.getDate(), numberOfWatermark, timestamps, numberOfFragmentRequest);
 
 				// insert new request
 				DatabaseService.insertRequest(request);

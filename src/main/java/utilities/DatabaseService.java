@@ -252,8 +252,8 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "INSERT INTO request (device_id, data_user, type, unit, date, number_of_watermark, timestamps) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
+			String sql = "INSERT INTO request (device_id, data_user, type, unit, date, number_of_watermark, timestamps, number_of_fragment_request) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, request.getDeviceId());
@@ -263,6 +263,7 @@ public class DatabaseService {
 			preparedStatement.setDate(5, Date.valueOf(request.getDate()));
 			preparedStatement.setInt(6, request.getNumberOfWatermark());
 			preparedStatement.setArray(7, connection.createArrayOf("timestamp", request.getTimestamps().toArray()));
+			preparedStatement.setInt(8, request.getNumberOfFragmentRequest());
 			preparedStatement.executeUpdate();
 
 			preparedStatement.close();
@@ -277,7 +278,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT number_of_watermark, timestamps FROM request WHERE device_id = ? AND data_user = ? AND type = ? "
+			String sql = "SELECT number_of_watermark, timestamps, number_of_fragment_request FROM request WHERE device_id = ? AND data_user = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -295,7 +296,7 @@ public class DatabaseService {
 					timestamps.add(timestampArray[i].toLocalDateTime());
 				}
 				return new Request(deviceId, dataUser, type, unit, date,
-						resultSet.getInt("number_of_watermark"), timestamps);
+						resultSet.getInt("number_of_watermark"), timestamps, resultSet.getInt("number_of_fragment_request"));
 			}
 
 			resultSet.close();
@@ -312,7 +313,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT data_user, number_of_watermark, timestamps FROM request "
+			String sql = "SELECT data_user, number_of_watermark, timestamps, number_of_fragment_request FROM request "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -329,7 +330,7 @@ public class DatabaseService {
 					timestamps.add(timestampArray[i].toLocalDateTime());
 				}
 				requests.add(new Request(deviceId, resultSet.getInt("data_user"), type, unit, date,
-						resultSet.getInt("number_of_watermark"), timestamps));
+						resultSet.getInt("number_of_watermark"), timestamps, resultSet.getInt("number_of_fragment_request")));
 			}
 
 			resultSet.close();
@@ -365,11 +366,11 @@ public class DatabaseService {
 		}
 	}
 
-	public static Integer getNumberOfWatermark(String deviceId, String type, String unit, LocalDate date) {
+	public static int getNumberOfFragmentRequest(String deviceId, String type, String unit, LocalDate date) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT max(number_of_watermark) FROM request WHERE device_id = ? AND type = ? "
+			String sql = "SELECT max(number_of_fragment_request) FROM request WHERE device_id = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);

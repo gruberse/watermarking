@@ -84,7 +84,7 @@ public class DetectionService {
 
 			Fragment matchingFragment = new Fragment();
 			BigDecimal matchingFragmentSimilarity = BigDecimal.valueOf(0.0);
-			HashMap<Integer, Integer> matchingSequence = new HashMap<>();
+			HashMap<Integer, Integer> matchingMeasurements = new HashMap<>();
 
 			// retrieve usability constraints
 			UsabilityConstraint usabilityConstraint = DatabaseService
@@ -96,16 +96,17 @@ public class DetectionService {
 					suspiciousFragment.getMin().subtract(usabilityConstraint.getMaximumError()),
 					suspiciousFragment.getMax().add(usabilityConstraint.getMaximumError()))) {
 
-				HashMap<Integer, Integer> sequence = getSequence(suspiciousFragment, fragment, usabilityConstraint);
+				HashMap<Integer, Integer> matches = getMatchingMeasurements(suspiciousFragment, fragment,
+						usabilityConstraint);
 
-				if (sequence.size() == suspiciousFragment.getMeasurements().size()) {
-					BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment, sequence);
+				if (matches.size() == suspiciousFragment.getMeasurements().size()) {
+					BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment, matches);
 
 					// set highest similarity fragment
 					if (fragmentSimilarity.compareTo(matchingFragmentSimilarity) > 0) {
 						matchingFragmentSimilarity = fragmentSimilarity;
 						matchingFragment = fragment;
-						matchingSequence = sequence;
+						matchingMeasurements = matches;
 					}
 				}
 			}
@@ -119,7 +120,8 @@ public class DetectionService {
 				report = report + "\nmatching fragment similarity:\t" + matchingFragmentSimilarity;
 
 				// extract (noisy) watermark
-				BigDecimal[] noisyWatermark = extractWatermark(suspiciousFragment, matchingFragment, matchingSequence);
+				BigDecimal[] noisyWatermark = extractWatermark(suspiciousFragment, matchingFragment,
+						matchingMeasurements);
 
 				// retrieve requests on matching fragment
 				List<Request> requests = DatabaseService.getRequests(matchingFragment.getDeviceId(),
@@ -139,7 +141,7 @@ public class DetectionService {
 						prevFragment, nextFragment)) {
 
 					BigDecimal watermarkSimilarity = getWatermarkSimilarity(noisyWatermark,
-							potentialLeaker.getWatermark(), usabilityConstraint, matchingSequence);
+							potentialLeaker.getWatermark(), usabilityConstraint, matchingMeasurements);
 
 					// add to list if above threshold
 					if (watermarkSimilarity.compareTo(watermarkSimilarityThreshold) >= 0) {
@@ -198,8 +200,8 @@ public class DetectionService {
 		return report;
 	}
 
-	private static HashMap<Integer, Integer> getSequence(Fragment suspiciousFragment, Fragment originalFragment,
-			UsabilityConstraint usabilityConstraint) {
+	private static HashMap<Integer, Integer> getMatchingMeasurements(Fragment suspiciousFragment,
+			Fragment originalFragment, UsabilityConstraint usabilityConstraint) {
 
 		HashMap<Integer, Integer> sequence = new HashMap<>();
 		;
@@ -226,43 +228,33 @@ public class DetectionService {
 	}
 
 	private static BigDecimal getFragmentSimilarity(Fragment suspiciousFragment, Fragment originalFragment,
-			HashMap<Integer, Integer> sequence) {
+			HashMap<Integer, Integer> matchingMeasurements) {
 
 		BigDecimal similarity = new BigDecimal("0.0");
 
-		if (sequence.size() == 0) {
-			return similarity;
-		}
-
-		for (Entry<Integer, Integer> entry : sequence.entrySet()) {
-
-			BigDecimal measurementSimilarity = new BigDecimal("0.0");
+		for (Entry<Integer, Integer> entry : matchingMeasurements.entrySet()) {
 
 			Measurement suspiciousMeasurement = suspiciousFragment.getMeasurements().get(entry.getKey());
 			Measurement originalMeasurement = originalFragment.getMeasurements().get(entry.getValue());
 
 			BigDecimal distance = (suspiciousMeasurement.getValue().subtract(originalMeasurement.getValue())).abs();
-			if (distance.compareTo(BigDecimal.valueOf(0.0)) == 0) {
-				measurementSimilarity = new BigDecimal("1.0");
-			} else {
-				measurementSimilarity = BigDecimal.valueOf(1)
-						.subtract(distance.divide(originalMeasurement.getValue(), 4, RoundingMode.HALF_UP));
-			}
+			BigDecimal measurementSimilarity = BigDecimal.valueOf(1)
+					.subtract(distance.divide(originalMeasurement.getValue(), 4, RoundingMode.HALF_UP));
 
 			similarity = similarity.add(measurementSimilarity);
 		}
 
-		similarity = similarity.divide(BigDecimal.valueOf(sequence.size()), 4, RoundingMode.HALF_UP);
+		similarity = similarity.divide(BigDecimal.valueOf(matchingMeasurements.size()), 4, RoundingMode.HALF_UP);
 
 		return similarity;
 	}
 
 	private static BigDecimal[] extractWatermark(Fragment suspiciousFragment, Fragment originalFragment,
-			HashMap<Integer, Integer> sequence) {
+			HashMap<Integer, Integer> matchingMeasurements) {
 
 		BigDecimal[] watermark = new BigDecimal[suspiciousFragment.getMeasurements().size()];
 
-		for (Entry<Integer, Integer> entry : sequence.entrySet()) {
+		for (Entry<Integer, Integer> entry : matchingMeasurements.entrySet()) {
 			watermark[entry.getKey()] = suspiciousFragment.getMeasurements().get(entry.getKey()).getValue()
 					.subtract(originalFragment.getMeasurements().get(entry.getValue()).getValue());
 		}
@@ -318,32 +310,25 @@ public class DetectionService {
 	}
 
 	private static BigDecimal getWatermarkSimilarity(BigDecimal[] suspiciousWatermark, BigDecimal[] originalWatermark,
-			UsabilityConstraint usabilityConstraint, HashMap<Integer, Integer> sequence) {
+			UsabilityConstraint usabilityConstraint, HashMap<Integer, Integer> matchingMeasurements) {
 
 		BigDecimal similarity = new BigDecimal("0.0");
 		BigDecimal maxDistance = usabilityConstraint.getMaximumError().multiply(BigDecimal.valueOf(2.0));
 
-		for (Entry<Integer, Integer> entry : sequence.entrySet()) {
+		for (Entry<Integer, Integer> entry : matchingMeasurements.entrySet()) {
 
-			BigDecimal markSimilarity = new BigDecimal("0.0");
 			BigDecimal suspiciousMark = suspiciousWatermark[entry.getKey()];
 			BigDecimal originalMark = originalWatermark[entry.getValue()];
 
 			BigDecimal distance = (suspiciousMark.subtract(originalMark)).abs();
-
-			if (distance.compareTo(BigDecimal.valueOf(0)) == 0) {
-				markSimilarity = new BigDecimal("1.0");
-			} else if (distance.compareTo(maxDistance) > 0) {
-				markSimilarity = new BigDecimal("0.0");
-			} else {
-				markSimilarity = BigDecimal.valueOf(1).subtract(distance.divide(maxDistance, 4, RoundingMode.HALF_UP));
+			if (distance.compareTo(maxDistance) < 0) {
+				BigDecimal markSimilarity = BigDecimal.valueOf(1)
+						.subtract(distance.divide(maxDistance, 4, RoundingMode.HALF_UP));
+				similarity = similarity.add(markSimilarity);
 			}
-
-			similarity = similarity.add(markSimilarity);
-
 		}
 
-		similarity = similarity.divide(BigDecimal.valueOf(sequence.size()), 4, RoundingMode.HALF_UP);
+		similarity = similarity.divide(BigDecimal.valueOf(matchingMeasurements.size()), 4, RoundingMode.HALF_UP);
 
 		return similarity;
 	}
