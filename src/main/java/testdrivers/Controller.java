@@ -37,9 +37,9 @@ public class Controller {
 			FileService.FOLDER = "C:/temp/files/";
 
 			if (args.length == 0) {
-				System.out.println("-reset -table fragment");
-				System.out.println("-reset -table request");
-				System.out.println("-reset -table usability_constraint");
+				System.out.println("-reset -table -fragment");
+				System.out.println("-reset -table -request");
+				System.out.println("-reset -table -usability_constraint");
 				System.out.println("-reset -files [term]");
 				System.out.println("-reset -log");
 				System.out.println("");
@@ -48,12 +48,10 @@ public class Controller {
 				System.out.println("");
 				System.out.println("-set -usability_constraint [maximumError] [numberOfWatermarks] [numberOfRanges]");
 				System.out.println("");
-				System.out.println("---PatientSimulator---");
 				System.out.println("-generate [datasetName] [deviceId] [from] [to]");
 				System.out.println("-store [datasetName]");
 				System.out.println("-store");
 				System.out.println("");
-				System.out.println("---DataUserSimulator---");
 				System.out.println("-request -patient [datasetName] [dataUserId] [deviceId] [from] [to]");
 				System.out.println("-request -patients [datasetName] [dataUserId] [noOfDevices] [from] [to]");
 				System.out.println("-attack -deletion [datasetName] [newDatasetName] [frequency]");
@@ -62,7 +60,6 @@ public class Controller {
 				System.out.println("-attack -subset [datasetName] [newDatasetName] [startIndex] [endIndex]");
 				System.out.println("-attack -collusion [datasetName1] ... [datasetNameN] [newDatasetName]");
 				System.out.println("");
-				System.out.println("---DataDetectiveSimulator---");
 				System.out.println(
 						"-detect [datasetName] [reportName] [fragmentSimilarityThreshold] [watermarkSimilarityThreshold]");
 			}
@@ -70,7 +67,15 @@ public class Controller {
 			else {
 				if (args[0].contentEquals("-reset")) {
 					if (args[1].contentEquals("-table")) {
-						DatabaseService.deleteTable(args[2]);
+						if(args[2].contentEquals("-fragment")) {
+							DatabaseService.deleteTable("fragment");
+						}
+						if(args[2].contentEquals("-usability_constraint")) {
+							DatabaseService.deleteTable("usability_constraint");
+						}
+						if(args[2].contentEquals("-request")) {
+							DatabaseService.deleteTable("request");
+						}
 					}
 					if (args[1].contentEquals("-files")) {
 						FileService.deleteFiles(args[2]);
@@ -124,7 +129,8 @@ public class Controller {
 						DataUserSimulator.attackDatasetByDeletion(args[2], args[3], Integer.parseInt(args[4]));
 					}
 					if (args[1].contentEquals("-random")) {
-						DataUserSimulator.attackDatasetbyRandom(args[2], args[3], Double.parseDouble(args[4]), Long.parseLong(args[5]));
+						DataUserSimulator.attackDatasetbyRandom(args[2], args[3], Double.parseDouble(args[4]),
+								Long.parseLong(args[5]));
 					}
 					if (args[1].contentEquals("-rounding")) {
 						DataUserSimulator.attackDatasetByRounding(args[2], args[3], Integer.parseInt(args[4]));
