@@ -8,18 +8,19 @@ import utilities.TimeService;
 
 public class DataDetectiveSimulator {
 
-	public static void detectLeakage(String datasetName, String reportName, Double fragmentSimilarityThreshold,
-			Double watermarkSimilarityThreshold) {
+	public static void detectLeakage(String datasetName, Double fragmentSimilarityThreshold,
+			Double watermarkSimilarityThreshold, int numberOfColluders) {
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataDetectiveSimulator",
-				"detectLeakage(datasetName=" + datasetName + ", reportName=" + reportName
-						+ ", fragmentSimilarityThreshold=" + fragmentSimilarityThreshold
-						+ ", watermarkSimilarityThreshold=" + watermarkSimilarityThreshold + ")");
-		
+				"detectLeakage(datasetName=" + datasetName + ", fragmentSimilarityThreshold="
+						+ fragmentSimilarityThreshold + ", watermarkSimilarityThreshold=" + watermarkSimilarityThreshold
+						+ ", colluders=" + numberOfColluders + ")");
+
 		TimeService timeService = new TimeService();
+		String reportName = datasetName.substring(0, datasetName.indexOf(".json")) + "_report.txt";
 		DetectionService.detectLeakage(datasetName, reportName, BigDecimal.valueOf(fragmentSimilarityThreshold),
-				BigDecimal.valueOf(watermarkSimilarityThreshold));
+				BigDecimal.valueOf(watermarkSimilarityThreshold), numberOfColluders);
 		timeService.stop();
-		
+
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataDetectiveSimulator", "detectLeakage", timeService.getTime());
 	}
 }

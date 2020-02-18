@@ -17,9 +17,10 @@ public class WatermarkService {
 
 	public static BigDecimal[] generateWatermark(Request request, UsabilityConstraint usabilityConstraint,
 			Fragment fragment, Fragment prevFragment, Fragment nextFragment) {
-
+		
 		BigDecimal[] watermark = new BigDecimal[fragment.getMeasurements().size()];
-		Random random = new Random(fragment.getSecretKey() + Long.valueOf(request.getNumberOfWatermark()));
+		Random random = new Random(fragment.getSecretKey());
+		random.setSeed(Long.valueOf(request.getNumberOfWatermark() + "" + Math.abs(random.nextInt())));
 
 		// compute range probabilities: 50% / (2^((noOfRanges/2) - i))
 		// exception when i = 0 to complete 100%
@@ -45,7 +46,7 @@ public class WatermarkService {
 			Measurement measurement = fragment.getMeasurements().get(i);
 			Measurement prevMeasurement = new Measurement();
 			Measurement nextMeasurement = new Measurement();
-
+			
 			// set previous measurement
 			if (i > 0) {
 				prevMeasurement = fragment.getMeasurements().get(i - 1);
@@ -214,16 +215,15 @@ public class WatermarkService {
 					break;
 				}
 			}
-
+			
 			// compute mark: (min + (max - min) * random)
 			BigDecimal randomNumber4ValueSelection = BigDecimal.valueOf(random.nextDouble());
 			watermark[i] = selectedRange.getMinimum()
 					.add((selectedRange.getMaximum().subtract(selectedRange.getMinimum()))
 							.multiply(randomNumber4ValueSelection));
 			watermark[i] = watermark[i].setScale(15, RoundingMode.HALF_UP);
-			// System.out.println(watermark[i].toString().replace(".", ","));
+			//System.out.println(watermark[i].toString().replace(".", ","));
 		}
-
 		return watermark;
 	}
 }

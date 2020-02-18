@@ -17,31 +17,34 @@ import utilities.TimeService;
 
 public class DataUserSimulator {
 
-	public static void requestDataset(String datasetName, int dataUserId, String deviceId, String from, String to) {
-		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset(datasetName=" + datasetName
-				+ ", dataUserId=" + dataUserId + ", deviceId=" + deviceId + ", from=" + from + ", to=" + to + ")");
-		
+	public static void requestDataset(int dataUserId, String deviceId, String from, String to) {
+		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset(dataUserId=" + dataUserId
+				+ ", deviceId=" + deviceId + ", from=" + from + ", to=" + to + ")");
+
 		TimeService timeService = new TimeService();
+		String datasetName = "requestedDataset_by" + dataUserId + "_" + deviceId + "_" + from.toString() + "_" + to.toString() + ".json";
 		DataService.requestDataset(datasetName, dataUserId, deviceId, "cbg", "mmol/L", LocalDate.parse(from),
 				LocalDate.parse(to));
 		timeService.stop();
-		
+
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset", timeService.getTime());
 	}
 
-	public static void requestDataset(String datasetName, int dataUserId, int noOfDevices, String from, String to) {
-		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset(datasetName=" + datasetName
-				+ ", dataUserId=" + dataUserId + ", noOfDevices=" + noOfDevices + ", from=" + from + ", to=" + to + ")");
-		
+	public static void requestDataset(int dataUserId, int numberOfDevices, String from, String to) {
+		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator",
+				"requestDataset(dataUserId=" + dataUserId + ", noOfDevices="
+						+ numberOfDevices + ", from=" + from + ", to=" + to + ")");
+
 		TimeService timeService = new TimeService();
-		DataService.requestDataset(datasetName, dataUserId, noOfDevices, "cbg", "mmol/L", LocalDate.parse(from),
+		String datasetName = "requestedDataset_by" + dataUserId + "_" + numberOfDevices + "_" + from.toString() + "_" + to.toString() + ".json";
+		DataService.requestDataset(datasetName, dataUserId, numberOfDevices, "cbg", "mmol/L", LocalDate.parse(from),
 				LocalDate.parse(to));
 		timeService.stop();
-		
+
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset", timeService.getTime());
 	}
-	
-	public static void attackDatasetByDeletion(String datasetName, String newDatasetName, int n) {
+
+	public static void attackDatasetByDeletion(String datasetName, int n) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
@@ -52,10 +55,11 @@ public class DataUserSimulator {
 			}
 			dataset.set(i, fragment);
 		}
-		FileService.writeDataset(newDatasetName, dataset);
+		String attackedDatasetName = datasetName.substring(0, datasetName.indexOf(".json")) + "_deletion_" + n + ".json";
+		FileService.writeDataset(attackedDatasetName, dataset);
 	}
-	
-	public static void attackDatasetByRounding(String datasetName, String newDatasetName, int decimalDigits) {
+
+	public static void attackDatasetByRounding(String datasetName, int decimalDigits) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
@@ -66,10 +70,11 @@ public class DataUserSimulator {
 			}
 			dataset.set(i, fragment);
 		}
-		FileService.writeDataset(newDatasetName, dataset);
+		String attackedDatasetName = datasetName.substring(0, datasetName.indexOf(".json")) + "_rounding_" + decimalDigits + ".json";
+		FileService.writeDataset(attackedDatasetName, dataset);
 	}
 
-	public static void attackDatasetbyRandom(String datasetName, String newDatasetName, Double maxError, Long seed) {
+	public static void attackDatasetbyRandom(String datasetName, Double maxError, Long seed) {
 		Random random = new Random(seed);
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
 		for (int i = 0; i < dataset.size(); i++) {
@@ -86,10 +91,11 @@ public class DataUserSimulator {
 			}
 			dataset.set(i, fragment);
 		}
-		FileService.writeDataset(newDatasetName, dataset);
+		String attackedDatasetName = datasetName.substring(0, datasetName.indexOf(".json")) + "_random_" + maxError.toString().replace(".", "-") + ".json";
+		FileService.writeDataset(attackedDatasetName, dataset);
 	}
 
-	public static void attackDatasetbySubset(String datasetName, String newDatasetName, int startIndex, int endIndex) {
+	public static void attackDatasetbySubset(String datasetName, int startIndex, int endIndex) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
@@ -100,13 +106,16 @@ public class DataUserSimulator {
 			}
 			dataset.set(i, fragment);
 		}
-		FileService.writeDataset(newDatasetName, dataset);
+		String attackedDatasetName = datasetName.substring(0, datasetName.indexOf(".json")) + "_subset_" + startIndex + "-" + endIndex + ".json";
+		FileService.writeDataset(attackedDatasetName, dataset);
 	}
 
-	public static void attackDatasetByCollusion(List<String> datasetNames, String newDatasetName) {
+	public static void attackDatasetByCollusion(List<String> datasetNames) {
 		List<List<Fragment>> datasets = new LinkedList<>();
+		String attackedDatasetName = "colludedDataset";
 		for (String datasetName : datasetNames) {
 			datasets.add(FragmentationService.getFragments(datasetName));
+			attackedDatasetName = attackedDatasetName + "_" + datasetName.split("_")[2].substring(2);
 		}
 
 		List<Fragment> dataset = new LinkedList<>();
@@ -125,6 +134,7 @@ public class DataUserSimulator {
 			}
 			dataset.add(newFragment);
 		}
-		FileService.writeDataset(newDatasetName, dataset);
+		attackedDatasetName = attackedDatasetName + ".json";
+		FileService.writeDataset(attackedDatasetName, dataset);
 	}
 }

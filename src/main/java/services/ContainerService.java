@@ -36,10 +36,8 @@ public class ContainerService {
 	
 	private static List<Fragment> generateSecretKeys(List<Fragment> fragments) {
 		Random random = new Random();
-		Long min = Long.MIN_VALUE;
-		Long max = Long.MAX_VALUE - Long.valueOf(Integer.MAX_VALUE);
 		for (Fragment fragment : fragments) {
-			fragment.setSecretKey(min + ((long) (random.nextDouble() * (max - min))));
+			fragment.setSecretKey(random.nextLong());
 		}
 		return fragments;
 	}

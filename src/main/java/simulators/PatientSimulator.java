@@ -29,8 +29,8 @@ public class PatientSimulator {
 
 		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset", timeService.getTime());
 	}
-	
-	public static void generateDataset(String datasetName, String deviceId, String from, String to) {
+
+	public static void generateDataset(String deviceId, String from, String to) {
 		List<Fragment> dataset = new LinkedList<>();
 		Random random = new Random();
 
@@ -98,7 +98,7 @@ public class PatientSimulator {
 			dataset.add(fragment);
 			startDate = startDate.plusDays(1);
 		}
-		FileService.writeDataset(datasetName, dataset);
+		FileService.writeDataset("generatedDataset_" + deviceId + "_" + from.toString() + "_" + to.toString(), dataset);
 	}
-	
+
 }

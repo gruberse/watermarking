@@ -41,6 +41,7 @@ public class Fragment implements Comparable<Fragment> {
 		this.unit = unit;
 		this.date = date;
 		this.secretKey = secretKey;
+		this.measurements = new LinkedList<Measurement>();
 	}
 
 	public void setMeasurementsFromJsonArrayString(String measurements) {

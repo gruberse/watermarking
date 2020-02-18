@@ -26,7 +26,7 @@ public class DataService {
 		List<Fragment> fragments = DatabaseService.getFragments(deviceId, type, unit, from, to);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", timeService.getTime());
-
+		
 		// watermark embedding
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
 		timeService = new TimeService();
@@ -42,13 +42,13 @@ public class DataService {
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset", timeService.getTime());
 	}
 
-	public static void requestDataset(String datasetName, int dataUser, int noOfDevices, String type, String unit,
+	public static void requestDataset(String datasetName, int dataUser, int numberOfDevices, String type, String unit,
 			LocalDate from, LocalDate to) {
 
 		// retrieve fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
 		TimeService timeService = new TimeService();
-		List<Fragment> fragments = DatabaseService.getFragments(noOfDevices, type, unit, from, to);
+		List<Fragment> fragments = DatabaseService.getFragments(numberOfDevices, type, unit, from, to);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", timeService.getTime());
 
@@ -126,12 +126,12 @@ public class DataService {
 
 			// embed generated watermark
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
-				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
+				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
 				// ","));
 				BigDecimal watermarkedValue = fragment.getMeasurements().get(j).getValue().add(watermark[j]);
 				fragment.getMeasurements().get(j).setValue(watermarkedValue);
-				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
-				// ","));
+				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
+				//","));
 			}
 
 			// update watermarked fragment
