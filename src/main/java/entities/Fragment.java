@@ -97,42 +97,6 @@ public class Fragment implements Comparable<Fragment> {
 		return json;
 	}
 
-	public BigDecimal getMean() {
-		BigDecimal mean = new BigDecimal("0.0");
-
-		for (Measurement measurement : getMeasurements()) {
-			mean = mean.add(measurement.getValue());
-		}
-
-		mean = mean.divide(BigDecimal.valueOf(getMeasurements().size()), 15, RoundingMode.HALF_UP);
-
-		return mean;
-	}
-	
-	public BigDecimal getMin() {
-		BigDecimal min = new BigDecimal("55.0");
-
-		for (Measurement measurement : getMeasurements()) {
-			if(min.compareTo(measurement.getValue()) > 0) {
-				min = measurement.getValue();
-			}
-		}
-
-		return min;
-	}
-	
-	public BigDecimal getMax() {
-		BigDecimal max = new BigDecimal("0.0");
-
-		for (Measurement measurement : getMeasurements()) {
-			if(max.compareTo(measurement.getValue()) < 0) {
-				max = measurement.getValue();
-			}
-		}
-
-		return max;
-	}
-
 	@Override
 	public int compareTo(Fragment o) {
 		if (getDate() == null || o.getDate() == null) {

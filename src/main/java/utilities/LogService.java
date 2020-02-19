@@ -11,10 +11,6 @@ public class LogService {
 	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	private static final String logName = "log.txt";
 	
-	public static void log(String message) {
-		FileService.writeLine(logName, message);
-	}
-
 	public static void log(String level, String className, String operation) {
 		FileService.writeLine(logName,
 				LocalDateTime.now().format(formatter) + level + "[" + className + "]\t" + operation + ": ...");

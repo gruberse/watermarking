@@ -41,8 +41,8 @@ public class DetectionService {
 		// watermark detection
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "watermarkDetection");
 		timeService = new TimeService();
-		String report = detectWatermarks(suspiciousFragments, fragmentSimilarityThreshold,
-				watermarkSimilarityThreshold, numberOfColluders);
+		String report = detectWatermarks(suspiciousFragments, fragmentSimilarityThreshold, watermarkSimilarityThreshold,
+				numberOfColluders);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "watermarkDetection", timeService.getTime());
 
@@ -92,12 +92,9 @@ public class DetectionService {
 
 			// fragment similarity search
 			for (Fragment fragment : DatabaseService.getFragments(suspiciousFragment.getType(),
-					suspiciousFragment.getUnit(),
-					suspiciousFragment.getMin().subtract(usabilityConstraint.getMaximumError()),
-					suspiciousFragment.getMax().add(usabilityConstraint.getMaximumError()))) {
+					suspiciousFragment.getUnit(), suspiciousFragment.getDate())) {
 
-				HashMap<Integer, Integer> matches = getMatchingMeasurements(suspiciousFragment, fragment,
-						usabilityConstraint);
+				HashMap<Integer, Integer> matches = getMatchingMeasurements(suspiciousFragment, fragment);
 
 				if (matches.size() == suspiciousFragment.getMeasurements().size()) {
 					BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment, matches);
@@ -201,28 +198,20 @@ public class DetectionService {
 	}
 
 	private static HashMap<Integer, Integer> getMatchingMeasurements(Fragment suspiciousFragment,
-			Fragment originalFragment, UsabilityConstraint usabilityConstraint) {
+			Fragment originalFragment) {
 
 		HashMap<Integer, Integer> sequence = new HashMap<>();
-		;
 
 		for (int i = 0; i < suspiciousFragment.getMeasurements().size(); i++) {
 			Measurement suspiciousMeasurement = suspiciousFragment.getMeasurements().get(i);
 
 			for (int j = 0; j < originalFragment.getMeasurements().size(); j++) {
 				Measurement originalMeasurement = originalFragment.getMeasurements().get(j);
-				if ((originalMeasurement.getValue().subtract(usabilityConstraint.getMaximumError()))
-						.compareTo(suspiciousMeasurement.getValue()) <= 0
-						&& (originalMeasurement.getValue().add(usabilityConstraint.getMaximumError()))
-								.compareTo(suspiciousMeasurement.getValue()) >= 0
-						&& originalMeasurement.getTime().isEqual(suspiciousMeasurement.getTime())) {
+				if (originalMeasurement.getTime().isEqual(suspiciousMeasurement.getTime())) {
 					sequence.put(i, j);
 				}
 			}
 
-			if (sequence.size() < i + 1) {
-				return new HashMap<>();
-			}
 		}
 		return sequence;
 	}
@@ -244,7 +233,8 @@ public class DetectionService {
 			similarity = similarity.add(measurementSimilarity);
 		}
 
-		similarity = similarity.divide(BigDecimal.valueOf(matchingMeasurements.size()), 4, RoundingMode.HALF_UP);
+		similarity = similarity.divide(BigDecimal.valueOf(suspiciousFragment.getMeasurements().size()), 4,
+				RoundingMode.HALF_UP);
 
 		return similarity;
 	}
@@ -290,7 +280,7 @@ public class DetectionService {
 
 				// collect data users and watermarks
 				for (int index : dataUsersCombination) {
-					dataUsers.add(index);
+					dataUsers.add(index + 1);
 					DataLeaker singleLeaker = singleLeakers.get(index);
 					for (int j = 0; j < watermark.length; j++) {
 						watermark[j] = watermark[j].add(singleLeaker.getWatermark()[j]);
@@ -313,7 +303,6 @@ public class DetectionService {
 			UsabilityConstraint usabilityConstraint, HashMap<Integer, Integer> matchingMeasurements) {
 
 		BigDecimal similarity = new BigDecimal("0.0");
-		BigDecimal maxDistance = usabilityConstraint.getMaximumError().multiply(BigDecimal.valueOf(2.0));
 
 		for (Entry<Integer, Integer> entry : matchingMeasurements.entrySet()) {
 
@@ -321,9 +310,9 @@ public class DetectionService {
 			BigDecimal originalMark = originalWatermark[entry.getValue()];
 
 			BigDecimal distance = (suspiciousMark.subtract(originalMark)).abs();
-			if (distance.compareTo(maxDistance) < 0) {
+			if (distance.compareTo(usabilityConstraint.getMaximumError()) < 0) {
 				BigDecimal markSimilarity = BigDecimal.valueOf(1)
-						.subtract(distance.divide(maxDistance, 4, RoundingMode.HALF_UP));
+						.subtract(distance.divide(usabilityConstraint.getMaximumError(), 4, RoundingMode.HALF_UP));
 				similarity = similarity.add(markSimilarity);
 			}
 		}

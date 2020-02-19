@@ -16,23 +16,23 @@ import utilities.TimeService;
 
 public class PatientSimulator {
 
-	public static void storeDataset() {
-		storeDataset("testdata.json");
+	public static void storeDataset(Boolean randomSecretKey) {
+		storeDataset(randomSecretKey, "testdata.json");
 	}
 
-	public static void storeDataset(String datasetName) {
+	public static void storeDataset(Boolean randomSecretKey, String datasetName) {
 		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(datasetName=" + datasetName + ")");
 
 		TimeService timeService = new TimeService();
-		ContainerService.storeDataset(datasetName);
+		ContainerService.storeDataset(randomSecretKey, datasetName);
 		timeService.stop();
 
 		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset", timeService.getTime());
 	}
 
-	public static void generateDataset(String deviceId, String from, String to) {
+	public static void generateDataset(String deviceId, String from, String to, Long seed) {
 		List<Fragment> dataset = new LinkedList<>();
-		Random random = new Random();
+		Random random = new Random(seed);
 
 		int minute = 0;
 		int second = 0;
@@ -98,7 +98,7 @@ public class PatientSimulator {
 			dataset.add(fragment);
 			startDate = startDate.plusDays(1);
 		}
-		FileService.writeDataset("generatedDataset_" + deviceId + "_" + from.toString() + "_" + to.toString(), dataset);
+		FileService.writeDataset("generatedDataset_" + deviceId + "_" + from.toString() + "_" + to.toString() + ".json", dataset);
 	}
 
 }

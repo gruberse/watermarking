@@ -40,9 +40,17 @@ public class FileService {
 		}
 	}
 
-	public static void deleteFiles(String term) {
+	public static void deleteFiles() {
 		for (File file : new File(FOLDER).listFiles()) {
-			if (file.getName().contains(term)) {
+			if (file.getName().contains("Dataset") || file.getName().contains("report")) {
+				file.delete();
+			}
+		}
+	}
+	
+	public static void deleteFiles(String name) {
+		for (File file : new File(FOLDER).listFiles()) {
+			if (file.getName().contains(name)) {
 				file.delete();
 			}
 		}

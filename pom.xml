@@ -28,12 +28,20 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>testdrivers.Controller</mainClass>
+									<mainClass>interaction.Controller</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+					<outputDirectory>C:\temp</outputDirectory>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

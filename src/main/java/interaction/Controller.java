@@ -1,5 +1,6 @@
 package interaction;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class Controller {
 	public static void main(String[] args) {
 
 		if (Controller.class.getResource("Controller.class").toString().contains("jar") == false) {
-			// DatabaseService.deleteTable("fragment");
+			DatabaseService.deleteTable("fragment");
 			DatabaseService.deleteTable("request");
 			DatabaseService.deleteTable("usability_constraint");
 			FileService.deleteFiles("Dataset");
@@ -24,13 +25,12 @@ public class Controller {
 
 			DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(0.5, 256, 10));
 
-			// PatientSimulator.storeDataset();
+			PatientSimulator.storeDataset(false);
 
 			DataUserSimulator.requestDataset(1, "DexG5MobRec_SM64305440", "2017-02-04", "2017-02-05");
 			DataUserSimulator.requestDataset(2, "DexG5MobRec_SM64305440", "2017-02-04", "2017-02-04");
-
 			DataDetectiveSimulator.detectLeakage(
-					"requestedDataset_by1_DexG5MobRec_SM64305440_2017-02-04_2017-02-05.json", 0.8, 0.8, 2);
+					"requestedDataset_by1_DexG5MobRec_SM64305440_2017-02-04_2017-02-05.json", 0.01, 0.01, 2);
 
 		} else {
 
@@ -40,18 +40,17 @@ public class Controller {
 				System.out.println("-reset -table -fragment");
 				System.out.println("-reset -table -request");
 				System.out.println("-reset -table -usability_constraint");
-				System.out.println("-reset -files [term]");
+				System.out.println("-reset -files");
 				System.out.println("-reset -log");
-				System.out.println("");
-				System.out.println("-log -section");
-				System.out.println("-log -message [message]");
 				System.out.println("");
 				System.out.println("-set -usability_constraint [maximumError] [numberOfWatermarks] [numberOfRanges]");
 				System.out.println("");
-				System.out.println("-generate [deviceId] [from] [to]");
+				System.out.println("-generate [deviceId] [from] [to] [seed]");
 				System.out.println("");
-				System.out.println("-store [datasetName]");
-				System.out.println("-store");
+				System.out.println("-store -r");
+				System.out.println("-store -r [datasetName]");
+				System.out.println("-store -1");
+				System.out.println("-store -1 [datasetName]");
 				System.out.println("");
 				System.out.println("-request -patient [dataUserId] [deviceId] [from] [to]");
 				System.out.println("-request -patients [dataUserId] [numberOfDevices] [from] [to]");
@@ -80,25 +79,10 @@ public class Controller {
 						}
 					}
 					if (args[1].contentEquals("-files")) {
-						FileService.deleteFiles(args[2]);
+						FileService.deleteFiles();
 					}
 					if (args[1].contentEquals("-log")) {
 						LogService.delete();
-					}
-				}
-				if (args[0].contentEquals("-log")) {
-					if (args[1].contentEquals("-section")) {
-						LogService.log("----------------------------------------------------");
-					}
-					if (args[1].contentEquals("-message")) {
-						String message = "";
-						for (int i = 2; i < args.length; i++) {
-							message = message + args[i];
-							if (i + 1 < args.length) {
-								message = message + " ";
-							}
-						}
-						LogService.log(message);
 					}
 				}
 				if (args[0].contentEquals("-set")) {
@@ -108,13 +92,24 @@ public class Controller {
 					}
 				}
 				if (args[0].contentEquals("-generate")) {
-					PatientSimulator.generateDataset(args[1], args[2], args[3]);
+					PatientSimulator.generateDataset(args[1], args[2], args[3], Long.parseLong(args[4]));
 				}
 				if (args[0].contentEquals("-store")) {
-					if (args.length == 1) {
-						PatientSimulator.storeDataset();
-					} else {
-						PatientSimulator.storeDataset(args[1]);
+					if (args.length == 2) {
+						if (args[1].contentEquals("-1")) {
+							PatientSimulator.storeDataset(false);
+						}
+						if (args[1].contentEquals("-r")) {
+							PatientSimulator.storeDataset(true);
+						}
+					}
+					if (args.length == 3) {
+						if (args[1].contentEquals("-1")) {
+							PatientSimulator.storeDataset(false, args[2]);
+						}
+						if (args[1].contentEquals("-r")) {
+							PatientSimulator.storeDataset(true, args[2]);
+						}
 					}
 				}
 				if (args[0].contentEquals("-request")) {
