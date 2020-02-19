@@ -138,7 +138,7 @@ public class Controller {
 					}
 					if (args[1].contentEquals("-collusion")) {
 						List<String> datasetNames = new LinkedList<>();
-						for (int i = 2; (i + 1) < args.length; i++) {
+						for (int i = 2; i < args.length; i++) {
 							datasetNames.add(args[i]);
 						}
 						DataUserSimulator.attackDatasetByCollusion(datasetNames);

@@ -73,10 +73,6 @@ public class DataService {
 		for (int i = 0; i < fragments.size(); i++) {
 			Fragment fragment = fragments.get(i);
 
-			LogService.log(LogService.METHOD_LEVEL, "watermarkEmbedding", "fragment<" + fragment.getDeviceId() + ", "
-					+ fragment.getType() + ", " + fragment.getUnit() + ", " + fragment.getDate() + ">");
-			TimeService timeService = new TimeService();
-
 			// retrieve usability constraint
 			UsabilityConstraint usabilityConstraint = DatabaseService.getUsabilityConstraint(fragment.getType(),
 					fragment.getUnit());
@@ -136,12 +132,6 @@ public class DataService {
 
 			// update watermarked fragment
 			fragments.set(i, fragment);
-
-			timeService.stop();
-			LogService.log(
-					LogService.METHOD_LEVEL, "watermarkEmbedding", "fragment<" + fragment.getDeviceId() + ", "
-							+ fragment.getType() + ", " + fragment.getUnit() + ", " + fragment.getDate() + ">",
-					timeService.getTime());
 		}
 		return fragments;
 	}

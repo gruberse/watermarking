@@ -7,7 +7,6 @@ public class LogService {
 
 	public static String SIMULATOR_LEVEL = "\t";
 	public static String SERVICE_LEVEL = "\t\t";
-	public static String METHOD_LEVEL = "\t\t\t";
 	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	private static final String logName = "log.txt";
 	
