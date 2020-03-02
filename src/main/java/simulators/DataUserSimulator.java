@@ -71,7 +71,7 @@ public class DataUserSimulator {
 			Fragment fragment = dataset.get(i);
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				BigDecimal roundedValue = fragment.getMeasurements().get(j).getValue().setScale(decimalDigit,
-						RoundingMode.CEILING);
+						RoundingMode.HALF_UP);
 				fragment.getMeasurements().get(j).setValue(roundedValue);
 			}
 			dataset.set(i, fragment);
@@ -134,7 +134,7 @@ public class DataUserSimulator {
 		for (int i = 0; i < datasets.get(0).size(); i++) {
 			Fragment newFragment = new Fragment(datasets.get(0).get(i).getDeviceId(), datasets.get(0).get(i).getType(),
 					datasets.get(0).get(i).getUnit(), datasets.get(0).get(i).getDate());
-			for (int j = 1; j < datasets.get(0).get(i).getMeasurements().size(); j++) {
+			for (int j = 0; j < datasets.get(0).get(i).getMeasurements().size(); j++) {
 				BigDecimal newValue = new BigDecimal("0.0");
 				for (List<Fragment> colludingDataset : datasets) {
 					newValue = newValue.add(colludingDataset.get(i).getMeasurements().get(j).getValue());

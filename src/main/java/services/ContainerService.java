@@ -13,7 +13,7 @@ public class ContainerService {
 
 	public static void storeDataset(Boolean randomSecretKey, String datasetName) {
 		// fragmentation
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "fragmentation");
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "datasetFragmentation");
 		TimeService timeService = new TimeService();
 		List<Fragment> fragments = FragmentationService.getFragments(datasetName);
 		if (randomSecretKey == true) {
@@ -27,7 +27,7 @@ public class ContainerService {
 			}
 		}
 		timeService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "fragmentation",
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "datasetFragmentation",
 				timeService.getTime());
 
 		// insert fragments

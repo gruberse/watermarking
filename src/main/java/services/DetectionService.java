@@ -262,6 +262,7 @@ public class DetectionService {
 			Iterator<int[]> iterator = CombinatoricsUtils.combinationsIterator(singleLeakers.size(), i);
 			while (iterator.hasNext()) {
 				int[] dataUsersCombination = iterator.next();
+				Arrays.sort(dataUsersCombination);
 
 				List<Integer> dataUsers = new LinkedList<>();
 				BigDecimal[] watermark = new BigDecimal[matchingFragment.getMeasurements().size()];
