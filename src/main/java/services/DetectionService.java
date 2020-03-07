@@ -92,7 +92,8 @@ public class DetectionService {
 				HashMap<Integer, Integer> matches = getMatchingMeasurements(suspiciousFragment, fragment);
 
 				if (matches.size() == suspiciousFragment.getMeasurements().size()) {
-					BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment, matches);
+					BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment,
+							usabilityConstraint, matches);
 
 					// set highest similarity fragment
 					if (fragmentSimilarity.compareTo(matchingFragmentSimilarity) > 0) {
@@ -206,7 +207,7 @@ public class DetectionService {
 	}
 
 	private static BigDecimal getFragmentSimilarity(Fragment suspiciousFragment, Fragment originalFragment,
-			HashMap<Integer, Integer> matchingMeasurements) {
+			UsabilityConstraint usabilityConstraint, HashMap<Integer, Integer> matchingMeasurements) {
 
 		BigDecimal similarity = new BigDecimal("0.0");
 
@@ -216,8 +217,9 @@ public class DetectionService {
 			Measurement originalMeasurement = originalFragment.getMeasurements().get(entry.getValue());
 
 			BigDecimal distance = (suspiciousMeasurement.getValue().subtract(originalMeasurement.getValue())).abs();
-			BigDecimal measurementSimilarity = BigDecimal.valueOf(1)
-					.subtract(distance.divide(originalMeasurement.getValue(), 4, RoundingMode.HALF_UP));
+			BigDecimal relativeDistance = distance.divide(usabilityConstraint.getMaximumValue(), 4,
+					RoundingMode.HALF_UP);
+			BigDecimal measurementSimilarity = BigDecimal.valueOf(1).subtract(relativeDistance);
 
 			similarity = similarity.add(measurementSimilarity);
 		}
@@ -300,9 +302,11 @@ public class DetectionService {
 			BigDecimal originalMark = originalWatermark[entry.getValue()];
 
 			BigDecimal distance = (suspiciousMark.subtract(originalMark)).abs();
-			if (distance.compareTo(usabilityConstraint.getMaximumError()) < 0) {
-				BigDecimal markSimilarity = BigDecimal.valueOf(1)
-						.subtract(distance.divide(usabilityConstraint.getMaximumError(), 4, RoundingMode.HALF_UP));
+			BigDecimal relativeDistance = distance.divide(
+					usabilityConstraint.getMaximumError().multiply(BigDecimal.valueOf(2)), 4, RoundingMode.HALF_UP);
+			BigDecimal markSimilarity = BigDecimal.valueOf(1).subtract(relativeDistance);
+
+			if (markSimilarity.compareTo(BigDecimal.valueOf(0)) > 0) {
 				similarity = similarity.add(markSimilarity);
 			}
 		}

@@ -1,6 +1,5 @@
 package interaction;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,7 +22,7 @@ public class Controller {
 			FileService.deleteFiles("Dataset");
 			LogService.delete();
 
-			DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(0.5, 256, 10));
+			DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(0.5, 10));
 
 			PatientSimulator.storeDataset(false);
 
@@ -44,7 +43,7 @@ public class Controller {
 				System.out.println("-reset -files");
 				System.out.println("-reset -log");
 				System.out.println("");
-				System.out.println("-set -usability_constraint [maximumError] [numberOfWatermarks] [numberOfRanges]");
+				System.out.println("-set -usability_constraint [maximumError] [numberOfRanges]");
 				System.out.println("");
 				System.out.println("-generate [deviceId] [from] [to] [seed]");
 				System.out.println("");
@@ -89,7 +88,7 @@ public class Controller {
 				if (args[0].contentEquals("-set")) {
 					if (args[1].contentEquals("-usability_constraint")) {
 						DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(Double.parseDouble(args[2]),
-								Integer.parseInt(args[3]), Integer.parseInt(args[4])));
+								Integer.parseInt(args[3])));
 					}
 				}
 				if (args[0].contentEquals("-generate")) {

@@ -10,26 +10,23 @@ public class UsabilityConstraint {
 	private BigDecimal minimumValue;
 	private BigDecimal maximumValue;
 	private BigDecimal maximumError;
-	private Integer numberOfWatermarks;
 	
-	public UsabilityConstraint(Double maximumError, Integer numberOfWatermarks, Integer numberOfRanges) {
+	public UsabilityConstraint(Double maximumError, Integer numberOfRanges) {
 		this.type = "cbg";
 		this.unit = "mmol/L";
 		this.minimumValue = BigDecimal.valueOf(0.0);
 		this.maximumValue = BigDecimal.valueOf(55.0);
 		this.maximumError = BigDecimal.valueOf(maximumError);
-		this.numberOfWatermarks = numberOfWatermarks;
 		this.numberOfRanges = numberOfRanges;
 	}
 	
 	public UsabilityConstraint(String type, String unit, BigDecimal minimumValue, BigDecimal maximumValue,
-			BigDecimal maximumError, Integer numberOfWatermarks, Integer numberOfRanges) {
+			BigDecimal maximumError, Integer numberOfRanges) {
 		this.type = type;
 		this.unit = unit;
 		this.minimumValue = minimumValue;
 		this.maximumValue = maximumValue;
 		this.maximumError = maximumError;
-		this.numberOfWatermarks = numberOfWatermarks;
 		this.numberOfRanges = numberOfRanges;
 	}
 
@@ -71,14 +68,6 @@ public class UsabilityConstraint {
 
 	public void setMaximumError(BigDecimal maximumError) {
 		this.maximumError = maximumError;
-	}
-
-	public Integer getNumberOfWatermarks() {
-		return numberOfWatermarks;
-	}
-
-	public void setNumberOfWatermarks(Integer numberOfWatermarks) {
-		this.numberOfWatermarks = numberOfWatermarks;
 	}
 
 	public Integer getNumberOfRanges() {

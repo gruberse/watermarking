@@ -1,6 +1,5 @@
 package utilities;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -41,8 +40,8 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "INSERT INTO usability_constraint (type, unit, minimum_value, maximum_value, maximum_error, number_of_watermarks, number_of_ranges) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
+			String sql = "INSERT INTO usability_constraint (type, unit, minimum_value, maximum_value, maximum_error, number_of_ranges) "
+					+ "VALUES (?, ?, ?, ?, ?, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, usabilityConstraint.getType());
@@ -50,8 +49,7 @@ public class DatabaseService {
 			preparedStatement.setBigDecimal(3, usabilityConstraint.getMinimumValue());
 			preparedStatement.setBigDecimal(4, usabilityConstraint.getMaximumValue());
 			preparedStatement.setBigDecimal(5, usabilityConstraint.getMaximumError());
-			preparedStatement.setInt(6, usabilityConstraint.getNumberOfWatermarks());
-			preparedStatement.setInt(7, usabilityConstraint.getNumberOfRanges());
+			preparedStatement.setInt(6, usabilityConstraint.getNumberOfRanges());
 			preparedStatement.executeUpdate();
 
 			preparedStatement.close();
@@ -74,8 +72,7 @@ public class DatabaseService {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			if (resultSet.next()) {
 				return new UsabilityConstraint(type, unit, resultSet.getBigDecimal("minimum_value"),
-						resultSet.getBigDecimal("maximum_value"), resultSet.getBigDecimal("maximum_error"),
-						resultSet.getInt("number_of_watermarks"), resultSet.getInt("number_of_ranges"));
+						resultSet.getBigDecimal("maximum_value"), resultSet.getBigDecimal("maximum_error"), resultSet.getInt("number_of_ranges"));
 			}
 
 			resultSet.close();
@@ -248,8 +245,8 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "INSERT INTO request (device_id, data_user, type, unit, date, number_of_watermark, timestamps, number_of_fragment_request) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+			String sql = "INSERT INTO request (device_id, data_user, type, unit, date, number_of_watermark, timestamps) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, request.getDeviceId());
@@ -259,7 +256,6 @@ public class DatabaseService {
 			preparedStatement.setDate(5, Date.valueOf(request.getDate()));
 			preparedStatement.setInt(6, request.getNumberOfWatermark());
 			preparedStatement.setArray(7, connection.createArrayOf("timestamp", request.getTimestamps().toArray()));
-			preparedStatement.setInt(8, request.getNumberOfFragmentRequest());
 			preparedStatement.executeUpdate();
 
 			preparedStatement.close();
@@ -273,7 +269,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT number_of_watermark, timestamps, number_of_fragment_request FROM request WHERE device_id = ? AND data_user = ? AND type = ? "
+			String sql = "SELECT number_of_watermark, timestamps FROM request WHERE device_id = ? AND data_user = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -291,7 +287,7 @@ public class DatabaseService {
 					timestamps.add(timestampArray[i].toLocalDateTime());
 				}
 				return new Request(deviceId, dataUser, type, unit, date, resultSet.getInt("number_of_watermark"),
-						timestamps, resultSet.getInt("number_of_fragment_request"));
+						timestamps);
 			}
 
 			resultSet.close();
@@ -308,7 +304,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT data_user, number_of_watermark, timestamps, number_of_fragment_request FROM request "
+			String sql = "SELECT data_user, number_of_watermark, timestamps FROM request "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -325,8 +321,7 @@ public class DatabaseService {
 					timestamps.add(timestampArray[i].toLocalDateTime());
 				}
 				requests.add(new Request(deviceId, resultSet.getInt("data_user"), type, unit, date,
-						resultSet.getInt("number_of_watermark"), timestamps,
-						resultSet.getInt("number_of_fragment_request")));
+						resultSet.getInt("number_of_watermark"), timestamps));
 			}
 
 			resultSet.close();
@@ -362,11 +357,11 @@ public class DatabaseService {
 		}
 	}
 
-	public static int getNumberOfFragmentRequest(String deviceId, String type, String unit, LocalDate date) {
+	public static int getNumberOfWatermark(String deviceId, String type, String unit, LocalDate date) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 
-			String sql = "SELECT max(number_of_fragment_request) FROM request WHERE device_id = ? AND type = ? "
+			String sql = "SELECT max(number_of_watermark) FROM request WHERE device_id = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);

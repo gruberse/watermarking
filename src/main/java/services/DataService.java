@@ -26,7 +26,7 @@ public class DataService {
 		List<Fragment> fragments = DatabaseService.getFragments(deviceId, type, unit, from, to);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", timeService.getTime());
-		
+
 		// watermark embedding
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
 		timeService = new TimeService();
@@ -85,20 +85,14 @@ public class DataService {
 			if (request == null) {
 
 				// retrieve request number
-				int numberOfFragmentRequest = 1 + DatabaseService.getNumberOfFragmentRequest(fragment.getDeviceId(),
+				int numberOfWatermark = 1 + DatabaseService.getNumberOfWatermark(fragment.getDeviceId(),
 						fragment.getType(), fragment.getUnit(), fragment.getDate());
-				
-				// limit number of watermarks
-				int numberOfWatermark = numberOfFragmentRequest % usabilityConstraint.getNumberOfWatermarks();
-				if (numberOfWatermark == 0) {
-					numberOfWatermark = usabilityConstraint.getNumberOfWatermarks();
-				}
-				
+
 				ArrayList<LocalDateTime> timestamps = new ArrayList<>();
 				timestamps.add(timestamp);
 
 				request = new Request(fragment.getDeviceId(), dataUser, fragment.getType(), fragment.getUnit(),
-						fragment.getDate(), numberOfWatermark, timestamps, numberOfFragmentRequest);
+						fragment.getDate(), numberOfWatermark, timestamps);
 
 				// insert new request
 				DatabaseService.insertRequest(request);
@@ -122,12 +116,12 @@ public class DataService {
 
 			// embed generated watermark
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
-				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
+				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
 				// ","));
 				BigDecimal watermarkedValue = fragment.getMeasurements().get(j).getValue().add(watermark[j]);
 				fragment.getMeasurements().get(j).setValue(watermarkedValue);
-				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
-				//","));
+				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
+				// ","));
 			}
 
 			// update watermarked fragment
