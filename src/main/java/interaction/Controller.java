@@ -1,5 +1,6 @@
 package interaction;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,11 +26,11 @@ public class Controller {
 			DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(0.5, 10));
 
 			PatientSimulator.storeDataset(false);
-
+			
 			DataUserSimulator.requestDataset(1, "DexG5MobRec_SM64305440", "2017-02-04", "2017-02-05");
 			DataUserSimulator.requestDataset(2, "DexG5MobRec_SM64305440", "2017-02-04", "2017-02-04");
 			DataDetectiveSimulator.detectLeakage(
-					"requestedDataset_by1_DexG5MobRec_SM64305440_2017-02-04_2017-02-05.json", 0.01, 0.01, 2);
+					"requestedDataset_by1_DexG5MobRec_SM64305440_2017-02-04_2017-02-05.json", 0.01, 0.01);
 
 			
 		} else {
@@ -62,7 +63,7 @@ public class Controller {
 				System.out.println("-attack -collusion [datasetName1] ... [datasetNameN]");
 				System.out.println("");
 				System.out.println(
-						"-detect [datasetName] [fragmentSimilarityThreshold] [watermarkSimilarityThreshold] [numberOfColluders]");
+						"-detect [datasetName] [fragmentSimilarityThreshold] [watermarkSimilarityThreshold]");
 			}
 
 			else {
@@ -146,7 +147,7 @@ public class Controller {
 				}
 				if (args[0].contentEquals("-detect")) {
 					DataDetectiveSimulator.detectLeakage(args[1], Double.parseDouble(args[2]),
-							Double.parseDouble(args[3]), Integer.parseInt(args[4]));
+							Double.parseDouble(args[3]));
 				}
 
 			}
