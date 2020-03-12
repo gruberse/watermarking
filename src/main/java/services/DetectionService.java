@@ -116,18 +116,10 @@ public class DetectionService {
 				List<Request> requests = DatabaseService.getRequests(matchingFragment.getDeviceId(),
 						matchingFragment.getType(), matchingFragment.getUnit(), matchingFragment.getDate());
 
-				// retrieve previous and next fragment
-				Fragment prevFragment = DatabaseService.getFragment(matchingFragment.getDeviceId(),
-						matchingFragment.getType(), matchingFragment.getUnit(),
-						matchingFragment.getDate().minusDays(1));
-				Fragment nextFragment = DatabaseService.getFragment(matchingFragment.getDeviceId(),
-						matchingFragment.getType(), matchingFragment.getUnit(), matchingFragment.getDate().plusDays(1));
-
 				List<DataLeaker> fragmentLeakers = new LinkedList<>();
 
 				// watermark similarity search
-				for (DataLeaker potentialLeaker : getPotentialLeakers(requests, usabilityConstraint, matchingFragment,
-						prevFragment, nextFragment)) {
+				for (DataLeaker potentialLeaker : getPotentialLeakers(requests, usabilityConstraint, matchingFragment)) {
 
 					BigDecimal watermarkSimilarity = getWatermarkSimilarity(noisyWatermark,
 							potentialLeaker.getWatermark(), usabilityConstraint, matchingMeasurements);
@@ -240,13 +232,12 @@ public class DetectionService {
 	}
 
 	private static List<DataLeaker> getPotentialLeakers(List<Request> requests, UsabilityConstraint usabilityConstraint,
-			Fragment matchingFragment, Fragment prevFragment, Fragment nextFragment) {
+			Fragment matchingFragment) {
 
 		List<DataLeaker> potentialLeakers = new LinkedList<>();
 		
 		for (Request request : requests) {
-			BigDecimal[] watermark = WatermarkService.generateWatermark(request, usabilityConstraint, matchingFragment,
-					prevFragment, nextFragment);
+			BigDecimal[] watermark = WatermarkService.generateWatermark(request, usabilityConstraint, matchingFragment);
 			DataLeaker singleLeaker = new DataLeaker(Arrays.asList(request.getDataUser()), watermark);
 
 			potentialLeakers.add(singleLeaker);

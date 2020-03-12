@@ -106,13 +106,7 @@ public class DataService {
 			}
 
 			// generate watermark
-			BigDecimal[] watermark = new BigDecimal[fragment.getMeasurements().size()];
-			Fragment prevFragment = DatabaseService.getFragment(fragment.getDeviceId(), fragment.getType(),
-					fragment.getUnit(), fragment.getDate().minusDays(1));
-			Fragment nextFragment = DatabaseService.getFragment(fragment.getDeviceId(), fragment.getType(),
-					fragment.getUnit(), fragment.getDate().plusDays(1));
-			watermark = WatermarkService.generateWatermark(request, usabilityConstraint, fragment, prevFragment,
-					nextFragment);
+			BigDecimal[] watermark = WatermarkService.generateWatermark(request, usabilityConstraint, fragment);
 
 			// embed generated watermark
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {

@@ -16,8 +16,8 @@ import entities.UsabilityConstraint;
 public class WatermarkService {
 
 	public static BigDecimal[] generateWatermark(Request request, UsabilityConstraint usabilityConstraint,
-			Fragment fragment, Fragment prevFragment, Fragment nextFragment) {
-		
+			Fragment fragment) {
+
 		BigDecimal[] watermark = new BigDecimal[fragment.getMeasurements().size()];
 		Random random = new Random(fragment.getSecretKey());
 		random.setSeed(Long.valueOf(request.getNumberOfWatermark() + "" + Math.abs(random.nextInt())));
@@ -31,8 +31,7 @@ public class WatermarkService {
 			if (i > 0) {
 				probability = BigDecimal.valueOf(0.5)
 						.divide(BigDecimal.valueOf(2).pow((usabilityConstraint.getNumberOfRanges() / 2) - i));
-			}
-			else {
+			} else {
 				probability = BigDecimal.valueOf(0.5)
 						.divide(BigDecimal.valueOf(2).pow((usabilityConstraint.getNumberOfRanges() / 2) - (i + 1)));
 			}
@@ -46,27 +45,20 @@ public class WatermarkService {
 			Measurement measurement = fragment.getMeasurements().get(i);
 			Measurement prevMeasurement = new Measurement();
 			Measurement nextMeasurement = new Measurement();
-			
+
 			// set previous measurement
 			if (i > 0) {
 				prevMeasurement = fragment.getMeasurements().get(i - 1);
+				prevMeasurement.setValue(prevMeasurement.getValue().add(watermark[i - 1]));
 			} else {
-				if (prevFragment == null) {
-					prevMeasurement.setValue(measurement.getValue());
-				} else {
-					prevMeasurement = prevFragment.getMeasurements().get(prevFragment.getMeasurements().size() - 1);
-				}
+				prevMeasurement.setValue(measurement.getValue());
 			}
 
 			// set next measurement
 			if (i + 1 < fragment.getMeasurements().size()) {
 				nextMeasurement = fragment.getMeasurements().get(i + 1);
 			} else {
-				if (nextFragment == null) {
-					nextMeasurement.setValue(measurement.getValue());
-				} else {
-					nextMeasurement = nextFragment.getMeasurements().get(0);
-				}
+				nextMeasurement.setValue(measurement.getValue());
 			}
 
 			BigDecimal lowerBound = measurement.getValue().subtract(usabilityConstraint.getMaximumError());
@@ -132,7 +124,6 @@ public class WatermarkService {
 				if (upperBound.compareTo(nextMeasurement.getValue()) > 0) {
 					upperBound = nextMeasurement.getValue();
 				}
-				lowerBound = prevMeasurement.getValue();
 			}
 			// v(t-1) = v(t) > v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) == 0
@@ -141,7 +132,6 @@ public class WatermarkService {
 				if (lowerBound.compareTo(nextMeasurement.getValue()) < 0) {
 					lowerBound = nextMeasurement.getValue();
 				}
-				upperBound = prevMeasurement.getValue();
 			}
 			// v(t-1) < v(t) = v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) > 0
@@ -150,7 +140,6 @@ public class WatermarkService {
 				if (lowerBound.compareTo(prevMeasurement.getValue()) < 0) {
 					lowerBound = prevMeasurement.getValue();
 				}
-				upperBound = nextMeasurement.getValue();
 			}
 			// v(t-1) > v(t) = v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) < 0
@@ -159,13 +148,12 @@ public class WatermarkService {
 				if (upperBound.compareTo(prevMeasurement.getValue()) > 0) {
 					upperBound = prevMeasurement.getValue();
 				}
-				lowerBound = nextMeasurement.getValue();
 			}
 			// v(t-1) = v(t) = v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) == 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) == 0) {
 
-				// keep lower and upper bound
+				// do nothing
 			}
 
 			// compute ranges and range sizes
@@ -215,14 +203,14 @@ public class WatermarkService {
 					break;
 				}
 			}
-			
+
 			// compute mark: (min + (max - min) * random)
 			BigDecimal randomNumber4ValueSelection = BigDecimal.valueOf(random.nextDouble());
 			watermark[i] = selectedRange.getMinimum()
 					.add((selectedRange.getMaximum().subtract(selectedRange.getMinimum()))
 							.multiply(randomNumber4ValueSelection));
 			watermark[i] = watermark[i].setScale(15, RoundingMode.HALF_UP);
-			//System.out.println(watermark[i].toString().replace(".", ","));
+			System.out.println(watermark[i].toString().replace(".", ","));
 		}
 		return watermark;
 	}
