@@ -48,8 +48,8 @@ public class WatermarkService {
 
 			// set previous measurement
 			if (i > 0) {
-				prevMeasurement = fragment.getMeasurements().get(i - 1);
-				prevMeasurement.setValue(prevMeasurement.getValue().add(watermark[i - 1]));
+				Measurement temp = fragment.getMeasurements().get(i - 1);
+				prevMeasurement = new Measurement(temp.getDeviceId(), temp.getType(), temp.getUnit(), temp.getTime(), temp.getValue().add(watermark[i - 1]));
 			} else {
 				prevMeasurement.setValue(measurement.getValue());
 			}
@@ -210,7 +210,7 @@ public class WatermarkService {
 					.add((selectedRange.getMaximum().subtract(selectedRange.getMinimum()))
 							.multiply(randomNumber4ValueSelection));
 			watermark[i] = watermark[i].setScale(15, RoundingMode.HALF_UP);
-			System.out.println(watermark[i].toString().replace(".", ","));
+			//System.out.println(watermark[i].toString().replace(".", ","));
 		}
 		return watermark;
 	}

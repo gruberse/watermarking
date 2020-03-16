@@ -16,10 +16,6 @@ import utilities.TimeService;
 
 public class PatientSimulator {
 
-	public static void storeDataset(Boolean randomSecretKey) {
-		storeDataset(randomSecretKey, "testdata.json");
-	}
-
 	public static void storeDataset(Boolean randomSecretKey, String datasetName) {
 		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(datasetName=" + datasetName + ")");
 

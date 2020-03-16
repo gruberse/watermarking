@@ -110,11 +110,11 @@ public class DataService {
 
 			// embed generated watermark
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
-				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
-				// ","));
+				 //System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
+				 //","));
 				BigDecimal watermarkedValue = fragment.getMeasurements().get(j).getValue().add(watermark[j]);
 				fragment.getMeasurements().get(j).setValue(watermarkedValue);
-				// System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
+				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
 				// ","));
 			}
 
