@@ -266,7 +266,7 @@ public class DetectionService {
 			}
 		}
 
-		similarity = similarity.divide(BigDecimal.valueOf(matchingMeasurements.size()), 4, RoundingMode.HALF_UP);
+		similarity = similarity.divide(BigDecimal.valueOf(suspiciousWatermark.length), 4, RoundingMode.HALF_UP);
 
 		return similarity;
 	}
