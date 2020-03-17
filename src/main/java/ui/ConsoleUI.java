@@ -39,7 +39,7 @@ public class ConsoleUI {
 			System.out.println("-attack -subset [datasetName] [startIndex] [endIndex]");
 			System.out.println("-attack -collusion [datasetName1] ... [datasetNameN]");
 			System.out.println("");
-			System.out.println("-detect [datasetName] [fragmentSimilarityThreshold] [watermarkSimilarityThreshold]");
+			System.out.println("-detect [datasetName] [fragmentSimilarityThreshold] [watermarkSimilarityThreshold] [numberOfColluders]");
 		}
 
 		else {
@@ -112,7 +112,7 @@ public class ConsoleUI {
 				}
 			}
 			if (args[0].contentEquals("-detect")) {
-				DataDetectiveSimulator.detectLeakage(args[1], Double.parseDouble(args[2]), Double.parseDouble(args[3]));
+				DataDetectiveSimulator.detectLeakage(args[1], Double.parseDouble(args[2]), Double.parseDouble(args[3]), Integer.parseInt(args[4]));
 			}
 		}
 	}

@@ -2,12 +2,15 @@ package services;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+
+import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import entities.DataLeaker;
 import entities.Fragment;
@@ -24,7 +27,7 @@ import utilities.WatermarkService;
 public class DetectionService {
 
 	public static void detectLeakage(String datasetName, String reportName, BigDecimal fragmentSimilarityThreshold,
-			BigDecimal watermarkSimilarityThreshold) {
+			BigDecimal watermarkSimilarityThreshold, int numberOfColluders) {
 
 		// get suspicious fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "FragmentationService.getFragments");
@@ -37,7 +40,8 @@ public class DetectionService {
 		// watermark detection
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "watermarkDetection");
 		timeService = new TimeService();
-		String report = detectWatermarks(suspiciousFragments, fragmentSimilarityThreshold, watermarkSimilarityThreshold);
+		String report = detectWatermarks(suspiciousFragments, fragmentSimilarityThreshold, watermarkSimilarityThreshold,
+				numberOfColluders);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DetectionService", "watermarkDetection", timeService.getTime());
 
@@ -50,13 +54,13 @@ public class DetectionService {
 	}
 
 	private static String detectWatermarks(List<Fragment> suspiciousFragments, BigDecimal fragmentSimilarityThreshold,
-			BigDecimal watermarkSimilarityThreshold) {
+			BigDecimal watermarkSimilarityThreshold, int numberOfColluders) {
 		List<DataLeaker> datasetLeakers = new LinkedList<>();
 
 		String report = "watermark detection report";
-		report = report + "\ndate:\t\t\t\t\t\t\t" + LocalDateTime.now();
 		report = report + "\nfragment similarity threshold:\t" + fragmentSimilarityThreshold;
 		report = report + "\nwatermark similarity threshold:\t" + watermarkSimilarityThreshold;
+		report = report + "\nnumber of colluders:\t\t\t" + numberOfColluders;
 		report = report + "\n";
 
 		// similarity search for each suspicious fragment
@@ -106,7 +110,7 @@ public class DetectionService {
 				report = report + "\t" + matchingFragment.getUnit();
 				report = report + "\t" + matchingFragment.getDate();
 				report = report + "\nmatching fragment similarity:\t" + matchingFragmentSimilarity;
-				
+
 				// extract (noisy) watermark
 				BigDecimal[] noisyWatermark = extractWatermark(suspiciousFragment, matchingFragment,
 						matchingMeasurements);
@@ -118,7 +122,8 @@ public class DetectionService {
 				List<DataLeaker> fragmentLeakers = new LinkedList<>();
 
 				// watermark similarity search
-				for (DataLeaker potentialLeaker : getSetOfPotentialLeakers(requests, usabilityConstraint, matchingFragment)) {
+				for (DataLeaker potentialLeaker : getSetOfPotentialLeakers(requests, usabilityConstraint,
+						matchingFragment, numberOfColluders)) {
 
 					BigDecimal watermarkSimilarity = getWatermarkSimilarity(noisyWatermark,
 							potentialLeaker.getWatermark(), usabilityConstraint, matchingMeasurements);
@@ -231,15 +236,48 @@ public class DetectionService {
 	}
 
 	private static List<DataLeaker> getSetOfPotentialLeakers(List<Request> requests, UsabilityConstraint usabilityConstraint,
-			Fragment matchingFragment) {
+			Fragment matchingFragment, int numberOfColluders) {
 
 		List<DataLeaker> setOfPotentialLeakers = new LinkedList<>();
-		
+
+		// generate single leakers
+		List<DataLeaker> singleLeakers = new LinkedList<>();
 		for (Request request : requests) {
 			BigDecimal[] watermark = WatermarkService.generateWatermark(request, usabilityConstraint, matchingFragment);
-			DataLeaker potentialLeaker = new DataLeaker(request.getDataUser(), watermark);
+			DataLeaker singleLeaker = new DataLeaker(Arrays.asList(request.getDataUser()), watermark);
 
-			setOfPotentialLeakers.add(potentialLeaker);
+			singleLeakers.add(singleLeaker);
+			setOfPotentialLeakers.add(singleLeaker);
+		}
+
+		// generate leaker combinations
+		for (int i = 2; i < numberOfColluders + 1 && i <= singleLeakers.size(); i++) {
+
+			Iterator<int[]> iterator = CombinatoricsUtils.combinationsIterator(singleLeakers.size(), i);
+			while (iterator.hasNext()) {
+				int[] dataUsersCombination = iterator.next();
+				Arrays.sort(dataUsersCombination);
+
+				List<Integer> dataUsers = new LinkedList<>();
+				BigDecimal[] watermark = new BigDecimal[matchingFragment.getMeasurements().size()];
+				Arrays.fill(watermark, BigDecimal.valueOf(0));
+
+				// collect data users and watermarks
+				for (int index : dataUsersCombination) {
+					DataLeaker singleLeaker = singleLeakers.get(index);
+					dataUsers.add(singleLeaker.getDataUsers().get(0));
+					for (int j = 0; j < watermark.length; j++) {
+						watermark[j] = watermark[j].add(singleLeaker.getWatermark()[j]);
+					}
+				}
+
+				// compute mean watermark
+				for (int j = 0; j < watermark.length; j++) {
+					watermark[j] = watermark[j].divide(BigDecimal.valueOf(dataUsers.size()), 4, RoundingMode.HALF_UP);
+				}
+
+				setOfPotentialLeakers.add(new DataLeaker(dataUsers, watermark));
+			}
 		}
 
 		return setOfPotentialLeakers;
@@ -254,7 +292,7 @@ public class DetectionService {
 
 			BigDecimal suspiciousMark = suspiciousWatermark[entry.getKey()];
 			BigDecimal originalMark = originalWatermark[entry.getValue()];
-			
+
 			BigDecimal distance = (suspiciousMark.subtract(originalMark)).abs();
 			BigDecimal relativeDistance = distance.divide(
 					usabilityConstraint.getMaximumError().multiply(BigDecimal.valueOf(2)), 4, RoundingMode.HALF_UP);
