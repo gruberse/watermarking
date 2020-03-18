@@ -115,7 +115,7 @@ public class DataService {
 				BigDecimal watermarkedValue = fragment.getMeasurements().get(j).getValue().add(watermark[j]);
 				fragment.getMeasurements().get(j).setValue(watermarkedValue);
 				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
-				// ","));
+				 //","));
 			}
 
 			// update watermarked fragment

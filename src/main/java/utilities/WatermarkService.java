@@ -17,7 +17,7 @@ public class WatermarkService {
 
 	public static BigDecimal[] generateWatermark(Request request, UsabilityConstraint usabilityConstraint,
 			Fragment fragment) {
-
+		
 		BigDecimal[] watermark = new BigDecimal[fragment.getMeasurements().size()];
 		Random random = new Random(fragment.getSecretKey());
 		random.setSeed(Long.valueOf(request.getNumberOfWatermark() + "" + Math.abs(random.nextInt())));
