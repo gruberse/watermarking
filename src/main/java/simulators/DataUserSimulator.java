@@ -20,31 +20,34 @@ public class DataUserSimulator {
 	public static void requestDataset(int dataUserId, String deviceId, String from, String to) {
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset(dataUserId=" + dataUserId
 				+ ", deviceId=" + deviceId + ", from=" + from + ", to=" + to + ")");
+
 		TimeService timeService = new TimeService();
 		String datasetName = "requestedDataset_by" + dataUserId + "_" + deviceId + "_" + from.toString() + "_"
 				+ to.toString() + ".json";
 		DataService.requestDataset(datasetName, dataUserId, deviceId, "cbg", "mmol/L", LocalDate.parse(from),
 				LocalDate.parse(to));
 		timeService.stop();
+
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset", timeService.getTime());
 	}
 
 	public static void requestDataset(int dataUserId, int numberOfDevices, String from, String to) {
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset(dataUserId=" + dataUserId
 				+ ", noOfDevices=" + numberOfDevices + ", from=" + from + ", to=" + to + ")");
+
 		TimeService timeService = new TimeService();
 		String datasetName = "requestedDataset_by" + dataUserId + "_" + numberOfDevices + "_" + from.toString() + "_"
 				+ to.toString() + ".json";
 		DataService.requestDataset(datasetName, dataUserId, numberOfDevices, "cbg", "mmol/L", LocalDate.parse(from),
 				LocalDate.parse(to));
 		timeService.stop();
+
 		LogService.log(LogService.SIMULATOR_LEVEL, "DataUserSimulator", "requestDataset", timeService.getTime());
 	}
 
 	public static void attackDatasetByDeletion(String datasetName, int n) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
 		List<Fragment> newDataset = new LinkedList<>();
-		
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
 			Fragment newFragment = new Fragment(fragment.getDeviceId(), fragment.getType(), fragment.getUnit(),
@@ -56,7 +59,6 @@ public class DataUserSimulator {
 			}
 			newDataset.add(newFragment);
 		}
-		
 		String attackedDatasetName = datasetName.substring(0, datasetName.indexOf(".json")) + "_deletion_" + n
 				+ ".json";
 		FileService.writeDataset(attackedDatasetName, newDataset);
@@ -64,7 +66,6 @@ public class DataUserSimulator {
 
 	public static void attackDatasetByRounding(String datasetName, int decimalDigit) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
-		
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
@@ -74,7 +75,6 @@ public class DataUserSimulator {
 			}
 			dataset.set(i, fragment);
 		}
-		
 		String attackedDatasetName = datasetName.substring(0, datasetName.indexOf(".json")) + "_rounding_"
 				+ decimalDigit + ".json";
 		FileService.writeDataset(attackedDatasetName, dataset);
@@ -83,7 +83,6 @@ public class DataUserSimulator {
 	public static void attackDatasetbyRandom(String datasetName, Double maxError, Long seed) {
 		Random random = new Random(seed);
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
-		
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
@@ -98,7 +97,6 @@ public class DataUserSimulator {
 			}
 			dataset.set(i, fragment);
 		}
-		
 		String attackedDatasetName = datasetName.substring(0, datasetName.indexOf(".json")) + "_random_"
 				+ maxError.toString().replace(".", "-") + ".json";
 		FileService.writeDataset(attackedDatasetName, dataset);
@@ -107,7 +105,6 @@ public class DataUserSimulator {
 	public static void attackDatasetbySubset(String datasetName, int startIndex, int endIndex) {
 		List<Fragment> dataset = FragmentationService.getFragments(datasetName);
 		List<Fragment> newDataset = new LinkedList<>();
-		
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
 			Fragment newFragment = new Fragment(fragment.getDeviceId(), fragment.getType(), fragment.getUnit(),
@@ -119,7 +116,6 @@ public class DataUserSimulator {
 			}
 			newDataset.add(newFragment);
 		}
-		
 		String attackedDatasetName = datasetName.substring(0, datasetName.indexOf(".json")) + "_subset_" + startIndex
 				+ "-" + endIndex + ".json";
 		FileService.writeDataset(attackedDatasetName, newDataset);
@@ -128,7 +124,6 @@ public class DataUserSimulator {
 	public static void attackDatasetByCollusion(List<String> datasetNames) {
 		List<List<Fragment>> datasets = new LinkedList<>();
 		String attackedDatasetName = "colludedDataset_by";
-		
 		for (String datasetName : datasetNames) {
 			datasets.add(FragmentationService.getFragments(datasetName));
 			attackedDatasetName = attackedDatasetName + "-" + datasetName.split("_")[1].substring(2);
@@ -150,7 +145,6 @@ public class DataUserSimulator {
 			}
 			dataset.add(newFragment);
 		}
-		
 		attackedDatasetName = attackedDatasetName + ".json";
 		FileService.writeDataset(attackedDatasetName, dataset);
 	}

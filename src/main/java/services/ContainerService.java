@@ -12,15 +12,10 @@ import utilities.TimeService;
 public class ContainerService {
 
 	public static void storeDataset(Boolean randomSecretKey, String datasetName) {
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "FragmentationService.getFragments");
+		// fragmentation
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "datasetFragmentation");
 		TimeService timeService = new TimeService();
 		List<Fragment> fragments = FragmentationService.getFragments(datasetName);
-		timeService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "FragmentationService.getFragments",
-				timeService.getTime());
-
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKeys");
-		timeService = new TimeService();
 		if (randomSecretKey == true) {
 			Random random = new Random();
 			for (Fragment fragment : fragments) {
@@ -32,8 +27,10 @@ public class ContainerService {
 			}
 		}
 		timeService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKeys", timeService.getTime());
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "datasetFragmentation",
+				timeService.getTime());
 
+		// insert fragments
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "DatabaseService.insertFragments");
 		timeService = new TimeService();
 		DatabaseService.insertFragments(fragments);

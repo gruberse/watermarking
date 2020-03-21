@@ -13,9 +13,8 @@ public class Request {
 	private LocalDate date;
 	private int numberOfWatermark;
 	private ArrayList<LocalDateTime> timestamps;
-
-	public Request(String deviceId, int dataUser, String type, String unit, LocalDate date, int numberOfWatermark,
-			ArrayList<LocalDateTime> timestamps) {
+	
+	public Request(String deviceId, int dataUser, String type, String unit, LocalDate date, int numberOfWatermark, ArrayList<LocalDateTime> timestamps) {
 		this.deviceId = deviceId;
 		this.dataUser = dataUser;
 		this.type = type;
@@ -24,7 +23,7 @@ public class Request {
 		this.numberOfWatermark = numberOfWatermark;
 		this.timestamps = timestamps;
 	}
-
+	
 	public String getDeviceId() {
 		return deviceId;
 	}
