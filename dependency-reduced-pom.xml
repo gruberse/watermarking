@@ -18,7 +18,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>interfaces.ConsoleUI</mainClass>
+                  <mainClass>ui.ConsoleUI</mainClass>
                 </transformer>
               </transformers>
             </configuration>
