@@ -19,22 +19,18 @@ public class DataService {
 
 	public static void requestDataset(String datasetName, int dataUser, String deviceId, String type, String unit,
 			LocalDate from, LocalDate to) {
-
-		// retrieve fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
 		TimeService timeService = new TimeService();
 		List<Fragment> fragments = DatabaseService.getFragments(deviceId, type, unit, from, to);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", timeService.getTime());
 
-		// watermark embedding
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
 		timeService = new TimeService();
 		fragments = embedWatermarks(dataUser, fragments);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", timeService.getTime());
 
-		// write to file system
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset");
 		timeService = new TimeService();
 		FileService.writeDataset(datasetName, fragments);
@@ -44,22 +40,18 @@ public class DataService {
 
 	public static void requestDataset(String datasetName, int dataUser, int numberOfDevices, String type, String unit,
 			LocalDate from, LocalDate to) {
-
-		// retrieve fragments
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments");
 		TimeService timeService = new TimeService();
 		List<Fragment> fragments = DatabaseService.getFragments(numberOfDevices, type, unit, from, to);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "DatabaseService.getFragments", timeService.getTime());
 
-		// watermark embedding
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding");
 		timeService = new TimeService();
 		fragments = embedWatermarks(dataUser, fragments);
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "watermarkEmbedding", timeService.getTime());
 
-		// write to file system
 		LogService.log(LogService.SERVICE_LEVEL, "DataService", "FileService.writeDataset");
 		timeService = new TimeService();
 		FileService.writeDataset(datasetName, fragments);
@@ -73,52 +65,32 @@ public class DataService {
 		for (int i = 0; i < fragments.size(); i++) {
 			Fragment fragment = fragments.get(i);
 
-			// retrieve usability constraint
 			UsabilityConstraint usabilityConstraint = DatabaseService.getUsabilityConstraint(fragment.getType(),
 					fragment.getUnit());
-
-			// retrieve number of watermark from database
 			Request request = DatabaseService.getRequest(dataUser, fragment.getDeviceId(), fragment.getType(),
 					fragment.getUnit(), fragment.getDate());
 
-			// data user has not requested fragment yet
 			if (request == null) {
-
-				// retrieve request number
 				int numberOfWatermark = 1 + DatabaseService.getNumberOfWatermark(fragment.getDeviceId(),
 						fragment.getType(), fragment.getUnit(), fragment.getDate());
-
 				ArrayList<LocalDateTime> timestamps = new ArrayList<>();
 				timestamps.add(timestamp);
-
 				request = new Request(fragment.getDeviceId(), dataUser, fragment.getType(), fragment.getUnit(),
 						fragment.getDate(), numberOfWatermark, timestamps);
-
-				// insert new request
 				DatabaseService.insertRequest(request);
 			}
-			// data user has already requested fragment
 			else {
 				request.getTimestamps().add(timestamp);
-
-				// update existing request
 				DatabaseService.updateRequest(request);
 			}
 
-			// generate watermark
 			BigDecimal[] watermark = WatermarkService.generateWatermark(request, usabilityConstraint, fragment);
 
-			// embed generated watermark
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
-				 //System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
-				 //","));
 				BigDecimal watermarkedValue = fragment.getMeasurements().get(j).getValue().add(watermark[j]);
 				fragment.getMeasurements().get(j).setValue(watermarkedValue);
-				//System.out.println(fragment.getMeasurements().get(j).getValue().toString().replace(".",
-				 //","));
 			}
 
-			// update watermarked fragment
 			fragments.set(i, fragment);
 		}
 		return fragments;

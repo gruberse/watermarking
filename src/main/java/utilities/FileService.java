@@ -20,7 +20,6 @@ public class FileService {
 				jsonString = jsonString + ",";
 		}
 		jsonString = jsonString + "\n]";
-
 		writeFile(datasetName, jsonString);
 	}
 	

@@ -17,16 +17,13 @@ public class WatermarkService {
 
 	public static BigDecimal[] generateWatermark(Request request, UsabilityConstraint usabilityConstraint,
 			Fragment fragment) {
-		
 		BigDecimal[] watermark = new BigDecimal[fragment.getMeasurements().size()];
 		Random random = new Random(fragment.getSecretKey());
 		random.setSeed(Long.valueOf(request.getNumberOfWatermark() + "" + Math.abs(random.nextInt())));
 
-		// compute range probabilities: 50% / (2^((noOfRanges/2) - i))
-		// exception when i = 0 to complete 100%
+		// compute range probabilities
 		List<BigDecimal> probabilities = new LinkedList<>();
 		for (int i = 0; i < usabilityConstraint.getNumberOfRanges() / 2; i++) {
-
 			BigDecimal probability;
 			if (i > 0) {
 				probability = BigDecimal.valueOf(0.5)
@@ -35,7 +32,6 @@ public class WatermarkService {
 				probability = BigDecimal.valueOf(0.5)
 						.divide(BigDecimal.valueOf(2).pow((usabilityConstraint.getNumberOfRanges() / 2) - (i + 1)));
 			}
-
 			probabilities.add(probability);
 		}
 
@@ -152,7 +148,6 @@ public class WatermarkService {
 			// v(t-1) = v(t) = v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) == 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) == 0) {
-
 				// do nothing
 			}
 
@@ -204,13 +199,12 @@ public class WatermarkService {
 				}
 			}
 
-			// compute mark: (min + (max - min) * random)
+			// select mark
 			BigDecimal randomNumber4ValueSelection = BigDecimal.valueOf(random.nextDouble());
 			watermark[i] = selectedRange.getMinimum()
 					.add((selectedRange.getMaximum().subtract(selectedRange.getMinimum()))
 							.multiply(randomNumber4ValueSelection));
 			watermark[i] = watermark[i].setScale(15, RoundingMode.HALF_UP);
-			//System.out.println(watermark[i].toString().replace(".", ","));
 		}
 		return watermark;
 	}

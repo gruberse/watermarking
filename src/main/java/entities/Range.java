@@ -9,13 +9,11 @@ public class Range<T> implements Comparable<Range<T>> {
 	private T value;
 	
 	public Range(BigDecimal minimum, BigDecimal maximum) {
-		super();
 		this.minimum = minimum;
 		this.maximum = maximum;
 	}
 	
 	public Range(BigDecimal minimum, BigDecimal maximum, T value) {
-		super();
 		this.minimum = minimum;
 		this.maximum = maximum;
 		this.value = value;
@@ -27,11 +25,6 @@ public class Range<T> implements Comparable<Range<T>> {
 			return 0;
 		}
 		return getMinimum().compareTo(o.getMinimum());
-	}
-	
-	@Override
-	public String toString() {
-		return "[" + this.minimum + "," + this.maximum + "): " + value;
 	}
 	
 	@Override

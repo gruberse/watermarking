@@ -18,11 +18,9 @@ public class PatientSimulator {
 
 	public static void storeDataset(Boolean randomSecretKey, String datasetName) {
 		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset(datasetName=" + datasetName + ")");
-
 		TimeService timeService = new TimeService();
 		ContainerService.storeDataset(randomSecretKey, datasetName);
 		timeService.stop();
-
 		LogService.log(LogService.SIMULATOR_LEVEL, "PatientSimulator", "storeDataset", timeService.getTime());
 	}
 
@@ -91,10 +89,13 @@ public class PatientSimulator {
 					minute = minute - 60;
 				}
 			}
+
 			dataset.add(fragment);
 			startDate = startDate.plusDays(1);
 		}
-		FileService.writeDataset("generatedDataset_" + deviceId + "_" + from.toString() + "_" + to.toString() + ".json", dataset);
+
+		FileService.writeDataset("generatedDataset_" + deviceId + "_" + from.toString() + "_" + to.toString() + ".json",
+				dataset);
 	}
 
 }

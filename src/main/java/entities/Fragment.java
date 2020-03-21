@@ -32,7 +32,7 @@ public class Fragment implements Comparable<Fragment> {
 		this.date = date;
 		this.measurements = new LinkedList<Measurement>();
 	}
-	
+
 	public Fragment(String deviceId, String type, String unit, LocalDate date, long secretKey) {
 		this.deviceId = deviceId;
 		this.type = type;
@@ -50,7 +50,6 @@ public class Fragment implements Comparable<Fragment> {
 			JSONParser parser = new JSONParser();
 			JSONArray array = (JSONArray) parser.parse(measurements);
 
-			// retrieve measurements
 			for (Object object : array) {
 				JSONObject measurementObject = (JSONObject) object;
 
@@ -58,9 +57,11 @@ public class Fragment implements Comparable<Fragment> {
 				String type = (String) measurementObject.get("type");
 				String unit = (String) measurementObject.get("unit");
 				String timeString = (String) measurementObject.get("time");
+
 				if (timeString.contains("T")) {
 					timeString = timeString.replace("T", " ");
 				}
+
 				LocalDateTime time = LocalDateTime.parse(timeString, formatter);
 				BigDecimal value = new BigDecimal(measurementObject.get("value").toString());
 
@@ -101,17 +102,6 @@ public class Fragment implements Comparable<Fragment> {
 			return 0;
 		}
 		return getDate().compareTo(o.getDate());
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((date == null) ? 0 : date.hashCode());
-		result = prime * result + ((deviceId == null) ? 0 : deviceId.hashCode());
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
-		result = prime * result + ((unit == null) ? 0 : unit.hashCode());
-		return result;
 	}
 
 	@Override

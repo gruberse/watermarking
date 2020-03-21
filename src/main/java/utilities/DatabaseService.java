@@ -23,12 +23,10 @@ public class DatabaseService {
 	public static void deleteTable(String table) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "DELETE FROM " + table;
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.executeUpdate();
-
 			preparedStatement.close();
 			connection.close();
 		} catch (SQLException ex) {
@@ -39,7 +37,6 @@ public class DatabaseService {
 	public static void insertUsabilityConstraint(UsabilityConstraint usabilityConstraint) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "INSERT INTO usability_constraint (type, unit, minimum_value, maximum_value, maximum_error, number_of_ranges) "
 					+ "VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -51,7 +48,6 @@ public class DatabaseService {
 			preparedStatement.setBigDecimal(5, usabilityConstraint.getMaximumError());
 			preparedStatement.setInt(6, usabilityConstraint.getNumberOfRanges());
 			preparedStatement.executeUpdate();
-
 			preparedStatement.close();
 			connection.close();
 		} catch (SQLException ex) {
@@ -62,7 +58,6 @@ public class DatabaseService {
 	public static UsabilityConstraint getUsabilityConstraint(String type, String unit) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "SELECT * FROM usability_constraint WHERE type = ? AND unit = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -72,7 +67,8 @@ public class DatabaseService {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			if (resultSet.next()) {
 				return new UsabilityConstraint(type, unit, resultSet.getBigDecimal("minimum_value"),
-						resultSet.getBigDecimal("maximum_value"), resultSet.getBigDecimal("maximum_error"), resultSet.getInt("number_of_ranges"));
+						resultSet.getBigDecimal("maximum_value"), resultSet.getBigDecimal("maximum_error"),
+						resultSet.getInt("number_of_ranges"));
 			}
 
 			resultSet.close();
@@ -87,7 +83,6 @@ public class DatabaseService {
 	public static void insertFragments(List<Fragment> fragments) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "INSERT INTO fragment (device_id, type, unit, date, measurements, secret_key) "
 					+ "VALUES (?, ?, ?, ?, ?::JSON, ?)";
 
@@ -112,7 +107,6 @@ public class DatabaseService {
 	public static Fragment getFragment(String deviceId, String type, String unit, LocalDate date) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "SELECT date, measurements, secret_key FROM fragment "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
 
@@ -142,10 +136,8 @@ public class DatabaseService {
 
 	public static List<Fragment> getFragments(String deviceId, String type, String unit, LocalDate from, LocalDate to) {
 		List<Fragment> fragments = new LinkedList<>();
-
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "SELECT date, measurements, secret_key FROM fragment "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date BETWEEN ? AND ?";
 
@@ -178,10 +170,8 @@ public class DatabaseService {
 
 	public static List<Fragment> getFragments(String type, String unit, LocalDate date) {
 		List<Fragment> fragments = new LinkedList<>();
-
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "SELECT * FROM fragment WHERE type = ? AND unit = ? AND date = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -211,10 +201,8 @@ public class DatabaseService {
 
 	public static List<Fragment> getFragments(int noOfDevices, String type, String unit, LocalDate from, LocalDate to) {
 		List<Fragment> fragments = new LinkedList<>();
-
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "SELECT distinct device_id FROM fragment "
 					+ "WHERE type = ? AND unit = ? AND date BETWEEN ? AND ?";
 
@@ -244,7 +232,6 @@ public class DatabaseService {
 	public static void insertRequest(Request request) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "INSERT INTO request (device_id, data_user, type, unit, date, number_of_watermark, timestamps) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -268,7 +255,6 @@ public class DatabaseService {
 	public static Request getRequest(int dataUser, String deviceId, String type, String unit, LocalDate date) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "SELECT number_of_watermark, timestamps FROM request WHERE device_id = ? AND data_user = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 
@@ -303,7 +289,6 @@ public class DatabaseService {
 		List<Request> requests = new LinkedList<>();
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "SELECT data_user, number_of_watermark, timestamps FROM request "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
 
@@ -337,7 +322,6 @@ public class DatabaseService {
 	public static void updateRequest(Request request) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "UPDATE request SET timestamps = ? WHERE device_id = ? AND data_user = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 
@@ -360,7 +344,6 @@ public class DatabaseService {
 	public static int getNumberOfWatermark(String deviceId, String type, String unit, LocalDate date) {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-
 			String sql = "SELECT max(number_of_watermark) FROM request WHERE device_id = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
 

@@ -16,18 +16,11 @@ public class Measurement implements Comparable<Measurement> {
 	}
 	
 	public Measurement(String deviceId, String type, String unit, LocalDateTime time, BigDecimal value) {
-		super();
 		this.deviceId = deviceId;
 		this.type = type;
 		this.unit = unit;
 		this.time = time;
 		this.value = value;
-	}
-
-	@Override
-	public String toString() {
-		return "Measurement [deviceId=" + deviceId + ", type=" + type + ", unit=" + unit + ", time=" + time + ", value="
-				+ value + "]";
 	}
 
 	@Override

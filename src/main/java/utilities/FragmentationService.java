@@ -26,27 +26,26 @@ public class FragmentationService {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 			JSONParser parser = new JSONParser();
 
-			// retrieve measurements from json file
 			JSONArray array = (JSONArray) parser.parse(new FileReader(FileService.FOLDER + fileName));
 			for (Object measurementObject : array) {
 				JSONObject jsonMeasurement = (JSONObject) measurementObject;
 
-				// format fields
 				String deviceId = (String) jsonMeasurement.get("deviceId");
 				String type = (String) jsonMeasurement.get("type");
 				String unit = (String) jsonMeasurement.get("unit");
 				String timeString = (String) jsonMeasurement.get("time");
+				
 				if (timeString.contains("T")) {
 					timeString = timeString.replace("T", " ");
 				}
 				if (timeString.contains(".")) {
 					timeString = timeString.split("\\.")[0];
+				
 				}
 				LocalDateTime time = LocalDateTime.parse(timeString, formatter);
 				BigDecimal value = new BigDecimal(jsonMeasurement.get("value").toString());
 				Measurement measurement = new Measurement(deviceId, type, unit, time, value);
 
-				// collect fragments
 				Fragment fragment = new Fragment(measurement.getDeviceId(), measurement.getType(),
 						measurement.getUnit(), measurement.getTime().toLocalDate());
 				if (fragments.contains(fragment)) {

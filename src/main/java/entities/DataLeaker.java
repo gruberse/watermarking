@@ -8,25 +8,22 @@ public class DataLeaker implements Comparable<DataLeaker> {
 	private BigDecimal probability;
 	private List<Integer> dataUsers;
 	private BigDecimal[] watermark;
-	
-	public DataLeaker() {
-	}
-	
+
 	public DataLeaker(BigDecimal probability, List<Integer> dataUsers) {
 		this.probability = probability;
 		this.dataUsers = dataUsers;
 	}
-	
+
 	public DataLeaker(List<Integer> dataUsers, BigDecimal[] watermark) {
 		this.dataUsers = dataUsers;
 		this.watermark = watermark;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "probability of " + probability + "\tby data user " + dataUsers.toString();
 	}
-	
+
 	@Override
 	public int compareTo(DataLeaker o) {
 		if (getProbability() == null || o.getProbability() == null) {
