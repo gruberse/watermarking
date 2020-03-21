@@ -21,7 +21,7 @@ public class ProgramUI {
 		DatabaseService.insertUsabilityConstraint(new UsabilityConstraint(0.5, 10));
 
 		PatientSimulator.storeDataset(false, "testdata.json");
-		
+
 		DataUserSimulator.requestDataset(1, "DexG5MobRec_SM64305440", "2017-02-04", "2017-02-05");
 		DataUserSimulator.requestDataset(2, "DexG5MobRec_SM64305440", "2017-02-04", "2017-02-04");
 		DataDetectiveSimulator.detectLeakage("requestedDataset_by1_DexG5MobRec_SM64305440_2017-02-04_2017-02-05.json",

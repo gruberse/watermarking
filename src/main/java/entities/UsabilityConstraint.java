@@ -10,7 +10,7 @@ public class UsabilityConstraint {
 	private BigDecimal minimumValue;
 	private BigDecimal maximumValue;
 	private BigDecimal maximumError;
-	
+
 	public UsabilityConstraint(Double maximumError, Integer numberOfRanges) {
 		this.type = "cbg";
 		this.unit = "mmol/L";
@@ -19,7 +19,7 @@ public class UsabilityConstraint {
 		this.maximumError = BigDecimal.valueOf(maximumError);
 		this.numberOfRanges = numberOfRanges;
 	}
-	
+
 	public UsabilityConstraint(String type, String unit, BigDecimal minimumValue, BigDecimal maximumValue,
 			BigDecimal maximumError, Integer numberOfRanges) {
 		this.type = type;

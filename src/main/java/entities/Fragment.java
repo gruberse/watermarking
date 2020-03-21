@@ -22,7 +22,6 @@ public class Fragment implements Comparable<Fragment> {
 	private List<Measurement> measurements;
 
 	public Fragment() {
-
 	}
 
 	public Fragment(String deviceId, String type, String unit, LocalDate date) {
@@ -32,7 +31,7 @@ public class Fragment implements Comparable<Fragment> {
 		this.date = date;
 		this.measurements = new LinkedList<Measurement>();
 	}
-	
+
 	public Fragment(String deviceId, String type, String unit, LocalDate date, long secretKey) {
 		super();
 		this.deviceId = deviceId;
@@ -102,49 +101,6 @@ public class Fragment implements Comparable<Fragment> {
 			return 0;
 		}
 		return getDate().compareTo(o.getDate());
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((date == null) ? 0 : date.hashCode());
-		result = prime * result + ((deviceId == null) ? 0 : deviceId.hashCode());
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
-		result = prime * result + ((unit == null) ? 0 : unit.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Fragment other = (Fragment) obj;
-		if (date == null) {
-			if (other.date != null)
-				return false;
-		} else if (!date.equals(other.date))
-			return false;
-		if (deviceId == null) {
-			if (other.deviceId != null)
-				return false;
-		} else if (!deviceId.equals(other.deviceId))
-			return false;
-		if (type == null) {
-			if (other.type != null)
-				return false;
-		} else if (!type.equals(other.type))
-			return false;
-		if (unit == null) {
-			if (other.unit != null)
-				return false;
-		} else if (!unit.equals(other.unit))
-			return false;
-		return true;
 	}
 
 	public String getDeviceId() {
