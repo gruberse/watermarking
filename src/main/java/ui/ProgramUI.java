@@ -1,5 +1,7 @@
 package ui;
 
+import java.util.Arrays;
+
 import entities.UsabilityConstraint;
 import simulators.DataDetectiveSimulator;
 import simulators.DataUserSimulator;
