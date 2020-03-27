@@ -151,37 +151,6 @@ public class DetectionService {
 		return report;
 	}
 
-	private static List<DataUserWatermark> getDatasetLeakers(int datasetSize,
-			List<List<DataUserWatermark>> setOfMatchingWatermarks) {
-		List<DataUserWatermark> datasetLeakers = new LinkedList<>();
-
-		for (int i = 0; i < setOfMatchingWatermarks.size(); i++) {
-			List<DataUserWatermark> matchingWatermarks = setOfMatchingWatermarks.get(i);
-
-			for (int j = 0; j < matchingWatermarks.size(); j++) {
-				DataUserWatermark matchingWatermark = matchingWatermarks.get(j);
-
-				if (datasetLeakers.contains(matchingWatermark)) {
-					DataUserWatermark potentialLeaker = datasetLeakers.get(datasetLeakers.indexOf(matchingWatermark));
-					potentialLeaker
-							.setProbability(potentialLeaker.getProbability().add(matchingWatermark.getProbability()));
-				} else {
-					datasetLeakers.add(matchingWatermark);
-				}
-
-			}
-		}
-
-		for (int i = 0; i < datasetLeakers.size(); i++) {
-			DataUserWatermark dataLeaker = datasetLeakers.get(i);
-			dataLeaker.setProbability(
-					dataLeaker.getProbability().divide(BigDecimal.valueOf(datasetSize), 4, RoundingMode.HALF_UP));
-			datasetLeakers.get(i).setProbability(dataLeaker.getProbability());
-		}
-
-		return datasetLeakers;
-	}
-
 	private static HashMap<Integer, Integer> getMatchingMeasurements(Fragment suspiciousFragment,
 			Fragment originalFragment) {
 		HashMap<Integer, Integer> sequence = new HashMap<>();
@@ -296,5 +265,35 @@ public class DetectionService {
 		similarity = similarity.divide(BigDecimal.valueOf(matchingMeasurements.size()), 4, RoundingMode.HALF_UP);
 		return similarity;
 	}
+	
+	private static List<DataUserWatermark> getDatasetLeakers(int datasetSize,
+			List<List<DataUserWatermark>> setOfMatchingWatermarks) {
+		List<DataUserWatermark> datasetLeakers = new LinkedList<>();
 
+		for (int i = 0; i < setOfMatchingWatermarks.size(); i++) {
+			List<DataUserWatermark> matchingWatermarks = setOfMatchingWatermarks.get(i);
+
+			for (int j = 0; j < matchingWatermarks.size(); j++) {
+				DataUserWatermark matchingWatermark = matchingWatermarks.get(j);
+
+				if (datasetLeakers.contains(matchingWatermark)) {
+					DataUserWatermark potentialLeaker = datasetLeakers.get(datasetLeakers.indexOf(matchingWatermark));
+					potentialLeaker
+							.setProbability(potentialLeaker.getProbability().add(matchingWatermark.getProbability()));
+				} else {
+					datasetLeakers.add(matchingWatermark);
+				}
+
+			}
+		}
+
+		for (int i = 0; i < datasetLeakers.size(); i++) {
+			DataUserWatermark dataLeaker = datasetLeakers.get(i);
+			dataLeaker.setProbability(
+					dataLeaker.getProbability().divide(BigDecimal.valueOf(datasetSize), 4, RoundingMode.HALF_UP));
+			datasetLeakers.get(i).setProbability(dataLeaker.getProbability());
+		}
+
+		return datasetLeakers;
+	}
 }
