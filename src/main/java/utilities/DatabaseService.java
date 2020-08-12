@@ -24,6 +24,7 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 			String sql = "DELETE FROM " + table;
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.executeUpdate();
 			preparedStatement.close();
@@ -38,6 +39,7 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "INSERT INTO usability_constraint (type, unit, minimum_value, maximum_value, maximum_error, number_of_ranges) "
 					+ "VALUES (?, ?, ?, ?, ?, ?)";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, usabilityConstraint.getType());
 			preparedStatement.setString(2, usabilityConstraint.getUnit());
@@ -57,17 +59,18 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 			String sql = "SELECT * FROM usability_constraint WHERE type = ? AND unit = ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, unit);
+
 			ResultSet resultSet = preparedStatement.executeQuery();
-			
 			if (resultSet.next()) {
 				return new UsabilityConstraint(type, unit, resultSet.getBigDecimal("minimum_value"),
 						resultSet.getBigDecimal("maximum_value"), resultSet.getBigDecimal("maximum_error"),
 						resultSet.getInt("number_of_ranges"));
 			}
-			
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
@@ -82,6 +85,7 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "INSERT INTO fragment (device_id, type, unit, date, measurements, secret_key) "
 					+ "VALUES (?, ?, ?, ?, ?::JSON, ?)";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			for (Fragment fragment : fragments) {
 				preparedStatement.setString(1, fragment.getDeviceId());
@@ -92,6 +96,7 @@ public class DatabaseService {
 				preparedStatement.setLong(6, fragment.getSecretKey());
 				preparedStatement.executeUpdate();
 			}
+
 			preparedStatement.close();
 			connection.close();
 		} catch (SQLException ex) {
@@ -104,13 +109,14 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "SELECT date, measurements, secret_key FROM fragment "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, deviceId);
 			preparedStatement.setString(2, type);
 			preparedStatement.setString(3, unit);
 			preparedStatement.setDate(4, Date.valueOf(date));
+
 			ResultSet resultSet = preparedStatement.executeQuery();
-			
 			if (resultSet.next()) {
 				Fragment fragment = new Fragment(deviceId, type, unit, LocalDate.parse(resultSet.getString("date")),
 						resultSet.getLong("secret_key"));
@@ -118,7 +124,7 @@ public class DatabaseService {
 				Collections.sort(fragment.getMeasurements());
 				return fragment;
 			}
-			
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
@@ -134,14 +140,15 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "SELECT date, measurements, secret_key FROM fragment "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date BETWEEN ? AND ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, deviceId);
 			preparedStatement.setString(2, type);
 			preparedStatement.setString(3, unit);
 			preparedStatement.setDate(4, Date.valueOf(from));
 			preparedStatement.setDate(5, Date.valueOf(to));
+
 			ResultSet resultSet = preparedStatement.executeQuery();
-			
 			while (resultSet.next()) {
 				Fragment fragment = new Fragment(deviceId, type, unit, LocalDate.parse(resultSet.getString("date")),
 						resultSet.getLong("secret_key"));
@@ -149,13 +156,14 @@ public class DatabaseService {
 				Collections.sort(fragment.getMeasurements());
 				fragments.add(fragment);
 			}
-			
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
 		Collections.sort(fragments);
 		return fragments;
 	}
@@ -165,12 +173,13 @@ public class DatabaseService {
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
 			String sql = "SELECT * FROM fragment WHERE type = ? AND unit = ? AND date = ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, unit);
 			preparedStatement.setDate(3, Date.valueOf(date));
+
 			ResultSet resultSet = preparedStatement.executeQuery();
-			
 			while (resultSet.next()) {
 				Fragment fragment = new Fragment(resultSet.getString("device_id"), type, unit, date,
 						resultSet.getLong("secret_key"));
@@ -178,13 +187,14 @@ public class DatabaseService {
 				Collections.sort(fragment.getMeasurements());
 				fragments.add(fragment);
 			}
-			
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
 		Collections.sort(fragments);
 		return fragments;
 	}
@@ -195,25 +205,27 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "SELECT distinct device_id FROM fragment "
 					+ "WHERE type = ? AND unit = ? AND date BETWEEN ? AND ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, unit);
 			preparedStatement.setDate(3, Date.valueOf(from));
 			preparedStatement.setDate(4, Date.valueOf(to));
+
 			ResultSet resultSet = preparedStatement.executeQuery();
 			int counter = 0;
-			
 			while (resultSet.next() && counter < noOfDevices) {
 				fragments.addAll(getFragments(resultSet.getString("device_id"), type, unit, from, to));
 				counter = counter + 1;
 			}
-			
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
 		return fragments;
 	}
 
@@ -222,6 +234,7 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "INSERT INTO request (device_id, data_user, type, unit, date, number_of_watermark, timestamps) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, request.getDeviceId());
 			preparedStatement.setInt(2, request.getDataUser());
@@ -231,6 +244,7 @@ public class DatabaseService {
 			preparedStatement.setInt(6, request.getNumberOfWatermark());
 			preparedStatement.setArray(7, connection.createArrayOf("timestamp", request.getTimestamps().toArray()));
 			preparedStatement.executeUpdate();
+
 			preparedStatement.close();
 			connection.close();
 		} catch (SQLException ex) {
@@ -243,26 +257,25 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "SELECT number_of_watermark, timestamps FROM request WHERE device_id = ? AND data_user = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, deviceId);
 			preparedStatement.setInt(2, dataUser);
 			preparedStatement.setString(3, type);
 			preparedStatement.setString(4, unit);
 			preparedStatement.setDate(5, Date.valueOf(date));
+
 			ResultSet resultSet = preparedStatement.executeQuery();
-			
 			if (resultSet.next()) {
 				Timestamp[] timestampArray = (Timestamp[]) resultSet.getArray("timestamps").getArray();
 				ArrayList<LocalDateTime> timestamps = new ArrayList<LocalDateTime>();
-				
 				for (int i = 0; i < timestampArray.length; i++) {
 					timestamps.add(timestampArray[i].toLocalDateTime());
 				}
-				
 				return new Request(deviceId, dataUser, type, unit, date, resultSet.getInt("number_of_watermark"),
 						timestamps);
 			}
-			
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
@@ -278,30 +291,31 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "SELECT data_user, number_of_watermark, timestamps FROM request "
 					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, deviceId);
 			preparedStatement.setString(2, type);
 			preparedStatement.setString(3, unit);
 			preparedStatement.setDate(4, Date.valueOf(date));
+
 			ResultSet resultSet = preparedStatement.executeQuery();
-			
 			while (resultSet.next()) {
 				Timestamp[] timestampArray = (Timestamp[]) resultSet.getArray("timestamps").getArray();
 				ArrayList<LocalDateTime> timestamps = new ArrayList<LocalDateTime>();
-				
 				for (int i = 0; i < timestampArray.length; i++) {
 					timestamps.add(timestampArray[i].toLocalDateTime());
 				}
-				
 				requests.add(new Request(deviceId, resultSet.getInt("data_user"), type, unit, date,
 						resultSet.getInt("number_of_watermark"), timestamps));
 			}
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
 		return requests;
 	}
 
@@ -310,6 +324,7 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "UPDATE request SET timestamps = ? WHERE device_id = ? AND data_user = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setArray(1, connection.createArrayOf("timestamp", request.getTimestamps().toArray()));
 			preparedStatement.setString(2, request.getDeviceId());
@@ -318,6 +333,7 @@ public class DatabaseService {
 			preparedStatement.setString(5, request.getUnit());
 			preparedStatement.setDate(6, Date.valueOf(request.getDate()));
 			preparedStatement.executeUpdate();
+
 			preparedStatement.close();
 			connection.close();
 		} catch (SQLException ex) {
@@ -330,17 +346,18 @@ public class DatabaseService {
 				"postgres", "admin")) {
 			String sql = "SELECT max(number_of_watermark) FROM request WHERE device_id = ? AND type = ? "
 					+ "AND unit = ? AND date = ?";
+
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, deviceId);
 			preparedStatement.setString(2, type);
 			preparedStatement.setString(3, unit);
 			preparedStatement.setDate(4, Date.valueOf(date));
+
 			ResultSet resultSet = preparedStatement.executeQuery();
-			
 			if (resultSet.next()) {
 				return resultSet.getInt("max");
 			}
-			
+
 			resultSet.close();
 			preparedStatement.close();
 			connection.close();

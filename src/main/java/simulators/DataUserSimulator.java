@@ -49,11 +49,13 @@ public class DataUserSimulator {
 			Fragment fragment = dataset.get(i);
 			Fragment newFragment = new Fragment(fragment.getDeviceId(), fragment.getType(), fragment.getUnit(),
 					fragment.getDate());
+			
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				if (j % n != 0) {
 					newFragment.getMeasurements().add(fragment.getMeasurements().get(j));
 				}
 			}
+			
 			newDataset.add(newFragment);
 		}
 		
@@ -67,11 +69,13 @@ public class DataUserSimulator {
 		
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
+		
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				BigDecimal roundedValue = fragment.getMeasurements().get(j).getValue().setScale(decimalDigit,
 						RoundingMode.HALF_UP);
 				fragment.getMeasurements().get(j).setValue(roundedValue);
 			}
+			
 			dataset.set(i, fragment);
 		}
 		
@@ -86,16 +90,20 @@ public class DataUserSimulator {
 		
 		for (int i = 0; i < dataset.size(); i++) {
 			Fragment fragment = dataset.get(i);
+			
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				BigDecimal randomValue = BigDecimal.valueOf(random.nextDouble() * maxError);
 				BigDecimal newValue = fragment.getMeasurements().get(j).getValue();
+				
 				if (random.nextBoolean() == true) {
 					newValue = newValue.add(randomValue);
 				} else {
 					newValue = newValue.subtract(randomValue);
 				}
+				
 				fragment.getMeasurements().get(j).setValue(newValue);
 			}
+			
 			dataset.set(i, fragment);
 		}
 		
@@ -112,11 +120,13 @@ public class DataUserSimulator {
 			Fragment fragment = dataset.get(i);
 			Fragment newFragment = new Fragment(fragment.getDeviceId(), fragment.getType(), fragment.getUnit(),
 					fragment.getDate());
+		
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				if (j >= startIndex && j <= endIndex) {
 					newFragment.getMeasurements().add(fragment.getMeasurements().get(j));
 				}
 			}
+			
 			newDataset.add(newFragment);
 		}
 		
@@ -128,7 +138,7 @@ public class DataUserSimulator {
 	public static void attackDatasetByCollusion(List<String> datasetNames) {
 		List<List<Fragment>> datasets = new LinkedList<>();
 		String attackedDatasetName = "colludedDataset_by";
-		
+	
 		for (String datasetName : datasetNames) {
 			datasets.add(FragmentationService.getFragments(datasetName));
 			attackedDatasetName = attackedDatasetName + "-" + datasetName.split("_")[1].substring(2);
@@ -138,16 +148,20 @@ public class DataUserSimulator {
 		for (int i = 0; i < datasets.get(0).size(); i++) {
 			Fragment newFragment = new Fragment(datasets.get(0).get(i).getDeviceId(), datasets.get(0).get(i).getType(),
 					datasets.get(0).get(i).getUnit(), datasets.get(0).get(i).getDate());
+		
 			for (int j = 0; j < datasets.get(0).get(i).getMeasurements().size(); j++) {
 				BigDecimal newValue = new BigDecimal("0.0");
+				
 				for (List<Fragment> colludingDataset : datasets) {
 					newValue = newValue.add(colludingDataset.get(i).getMeasurements().get(j).getValue());
 				}
+				
 				newValue = newValue.divide(BigDecimal.valueOf(datasets.size()), 15, RoundingMode.HALF_UP);
 				Measurement newMeasurement = new Measurement(newFragment.getDeviceId(), newFragment.getType(),
 						newFragment.getUnit(), datasets.get(0).get(i).getMeasurements().get(j).getTime(), newValue);
 				newFragment.getMeasurements().add(newMeasurement);
 			}
+			
 			dataset.add(newFragment);
 		}
 		

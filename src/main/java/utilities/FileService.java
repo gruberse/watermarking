@@ -11,7 +11,7 @@ import entities.Fragment;
 public class FileService {
 
 	public static String FOLDER = "files/";
-
+	
 	public static void writeDataset(String datasetName, List<Fragment> dataset) {
 		String jsonString = "[";
 		for (int i = 0; i < dataset.size(); i++) {
@@ -22,7 +22,7 @@ public class FileService {
 		jsonString = jsonString + "\n]";
 		writeFile(datasetName, jsonString);
 	}
-
+	
 	public static void writeLine(String fileName, String line) {
 		try (BufferedWriter out = new BufferedWriter(new FileWriter(FileService.FOLDER + fileName, true))) {
 			out.write(line + "\n");
@@ -46,7 +46,7 @@ public class FileService {
 			}
 		}
 	}
-
+	
 	public static void deleteFiles(String name) {
 		for (File file : new File(FOLDER).listFiles()) {
 			if (file.getName().contains(name)) {

@@ -82,18 +82,15 @@ public class ConsoleUI {
 					LogService.delete();
 				}
 			}
-			
 			if (args[0].contentEquals("-set")) {
 				if (args[1].contentEquals("-usability_constraint")) {
 					DatabaseService.insertUsabilityConstraint(
 							new UsabilityConstraint(Double.parseDouble(args[2]), Integer.parseInt(args[3])));
 				}
 			}
-			
 			if (args[0].contentEquals("-generate")) {
 				PatientSimulator.generateDataset(args[1], args[2], args[3], Long.parseLong(args[4]));
 			}
-			
 			if (args[0].contentEquals("-store")) {
 				if (args[1].contentEquals("-one")) {
 					PatientSimulator.storeDataset(false, args[2]);
@@ -102,7 +99,6 @@ public class ConsoleUI {
 					PatientSimulator.storeDataset(true, args[2]);
 				}
 			}
-			
 			if (args[0].contentEquals("-request")) {
 				if (args[1].contentEquals("-patient")) {
 					DataUserSimulator.requestDataset(Integer.parseInt(args[2]), args[3], args[4], args[5]);
@@ -112,7 +108,6 @@ public class ConsoleUI {
 							args[5]);
 				}
 			}
-			
 			if (args[0].contentEquals("-attack")) {
 				if (args[1].contentEquals("-deletion")) {
 					DataUserSimulator.attackDatasetByDeletion(args[2], Integer.parseInt(args[3]));
@@ -136,7 +131,6 @@ public class ConsoleUI {
 					DataUserSimulator.attackDatasetByCollusion(datasetNames);
 				}
 			}
-			
 			if (args[0].contentEquals("-detect")) {
 				DataDetectiveSimulator.detectLeakage(args[1], Double.parseDouble(args[2]), Double.parseDouble(args[3]),
 						Integer.parseInt(args[4]));

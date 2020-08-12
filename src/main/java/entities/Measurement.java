@@ -10,10 +10,11 @@ public class Measurement implements Comparable<Measurement> {
 	private String unit;
 	private LocalDateTime time;
 	private BigDecimal value;
-
+	
 	public Measurement() {
+		
 	}
-
+	
 	public Measurement(String deviceId, String type, String unit, LocalDateTime time, BigDecimal value) {
 		this.deviceId = deviceId;
 		this.type = type;

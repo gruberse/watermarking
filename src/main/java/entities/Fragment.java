@@ -22,6 +22,7 @@ public class Fragment implements Comparable<Fragment> {
 	private List<Measurement> measurements;
 
 	public Fragment() {
+
 	}
 
 	public Fragment(String deviceId, String type, String unit, LocalDate date) {
@@ -33,7 +34,6 @@ public class Fragment implements Comparable<Fragment> {
 	}
 
 	public Fragment(String deviceId, String type, String unit, LocalDate date, long secretKey) {
-		super();
 		this.deviceId = deviceId;
 		this.type = type;
 		this.unit = unit;
@@ -50,7 +50,6 @@ public class Fragment implements Comparable<Fragment> {
 			JSONParser parser = new JSONParser();
 			JSONArray array = (JSONArray) parser.parse(measurements);
 
-			// retrieve measurements
 			for (Object object : array) {
 				JSONObject measurementObject = (JSONObject) object;
 
@@ -58,9 +57,11 @@ public class Fragment implements Comparable<Fragment> {
 				String type = (String) measurementObject.get("type");
 				String unit = (String) measurementObject.get("unit");
 				String timeString = (String) measurementObject.get("time");
+
 				if (timeString.contains("T")) {
 					timeString = timeString.replace("T", " ");
 				}
+
 				LocalDateTime time = LocalDateTime.parse(timeString, formatter);
 				BigDecimal value = new BigDecimal(measurementObject.get("value").toString());
 
@@ -101,6 +102,38 @@ public class Fragment implements Comparable<Fragment> {
 			return 0;
 		}
 		return getDate().compareTo(o.getDate());
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Fragment other = (Fragment) obj;
+		if (date == null) {
+			if (other.date != null)
+				return false;
+		} else if (!date.equals(other.date))
+			return false;
+		if (deviceId == null) {
+			if (other.deviceId != null)
+				return false;
+		} else if (!deviceId.equals(other.deviceId))
+			return false;
+		if (type == null) {
+			if (other.type != null)
+				return false;
+		} else if (!type.equals(other.type))
+			return false;
+		if (unit == null) {
+			if (other.unit != null)
+				return false;
+		} else if (!unit.equals(other.unit))
+			return false;
+		return true;
 	}
 
 	public String getDeviceId() {

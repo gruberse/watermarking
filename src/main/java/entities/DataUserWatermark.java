@@ -3,13 +3,18 @@ package entities;
 import java.math.BigDecimal;
 import java.util.List;
 
-public class DataLeaker implements Comparable<DataLeaker> {
+public class DataUserWatermark implements Comparable<DataUserWatermark> {
 
 	private BigDecimal probability;
 	private List<Integer> dataUsers;
 	private BigDecimal[] watermark;
 
-	public DataLeaker(List<Integer> dataUsers, BigDecimal[] watermark) {
+	public DataUserWatermark(BigDecimal probability, List<Integer> dataUsers) {
+		this.probability = probability;
+		this.dataUsers = dataUsers;
+	}
+
+	public DataUserWatermark(List<Integer> dataUsers, BigDecimal[] watermark) {
 		this.dataUsers = dataUsers;
 		this.watermark = watermark;
 	}
@@ -20,7 +25,7 @@ public class DataLeaker implements Comparable<DataLeaker> {
 	}
 
 	@Override
-	public int compareTo(DataLeaker o) {
+	public int compareTo(DataUserWatermark o) {
 		if (getProbability() == null || o.getProbability() == null) {
 			return 0;
 		}
@@ -35,7 +40,7 @@ public class DataLeaker implements Comparable<DataLeaker> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		DataLeaker other = (DataLeaker) obj;
+		DataUserWatermark other = (DataUserWatermark) obj;
 		if (dataUsers == null) {
 			if (other.dataUsers != null)
 				return false;

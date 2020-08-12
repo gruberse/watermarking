@@ -21,6 +21,7 @@ public class WatermarkService {
 		Random random = new Random(fragment.getSecretKey());
 		random.setSeed(Long.valueOf(request.getNumberOfWatermark() + "" + Math.abs(random.nextInt())));
 
+		// compute range probabilities
 		List<BigDecimal> probabilities = new LinkedList<>();
 		for (int i = 0; i < usabilityConstraint.getNumberOfRanges() / 2; i++) {
 			BigDecimal probability;
@@ -36,18 +37,20 @@ public class WatermarkService {
 
 		Collections.sort(fragment.getMeasurements());
 		for (int i = 0; i < fragment.getMeasurements().size(); i++) {
+
 			Measurement measurement = fragment.getMeasurements().get(i);
 			Measurement prevMeasurement = new Measurement();
 			Measurement nextMeasurement = new Measurement();
 
+			// set previous measurement
 			if (i > 0) {
 				Measurement temp = fragment.getMeasurements().get(i - 1);
-				prevMeasurement = new Measurement(temp.getDeviceId(), temp.getType(), temp.getUnit(), temp.getTime(),
-						temp.getValue().add(watermark[i - 1]));
+				prevMeasurement = new Measurement(temp.getDeviceId(), temp.getType(), temp.getUnit(), temp.getTime(), temp.getValue().add(watermark[i - 1]));
 			} else {
 				prevMeasurement.setValue(measurement.getValue());
 			}
 
+			// set next measurement
 			if (i + 1 < fragment.getMeasurements().size()) {
 				nextMeasurement = fragment.getMeasurements().get(i + 1);
 			} else {
@@ -57,6 +60,7 @@ public class WatermarkService {
 			BigDecimal lowerBound = measurement.getValue().subtract(usabilityConstraint.getMaximumError());
 			BigDecimal upperBound = measurement.getValue().add(usabilityConstraint.getMaximumError());
 
+			// check valid bounds
 			if (lowerBound.compareTo(usabilityConstraint.getMinimumValue()) < 0) {
 				lowerBound = usabilityConstraint.getMinimumValue();
 			}
@@ -64,6 +68,7 @@ public class WatermarkService {
 				upperBound = usabilityConstraint.getMaximumValue();
 			}
 
+			// compute boundaries for each case
 			// v(t-1) < v(t) < v(t+1)
 			if (measurement.getValue().compareTo(prevMeasurement.getValue()) > 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) < 0) {
@@ -75,7 +80,6 @@ public class WatermarkService {
 					upperBound = nextMeasurement.getValue();
 				}
 			}
-
 			// v(t-1) > v(t) > v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) < 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) > 0) {
@@ -87,7 +91,6 @@ public class WatermarkService {
 					upperBound = prevMeasurement.getValue();
 				}
 			}
-
 			// v(t-1) < v(t) > v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) > 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) > 0) {
@@ -99,7 +102,6 @@ public class WatermarkService {
 					lowerBound = nextMeasurement.getValue();
 				}
 			}
-
 			// v(t-1) > v(t) < v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) < 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) < 0) {
@@ -111,7 +113,6 @@ public class WatermarkService {
 					upperBound = nextMeasurement.getValue();
 				}
 			}
-
 			// v(t-1) = v(t) < v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) == 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) < 0) {
@@ -120,7 +121,6 @@ public class WatermarkService {
 					upperBound = nextMeasurement.getValue();
 				}
 			}
-
 			// v(t-1) = v(t) > v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) == 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) > 0) {
@@ -129,7 +129,6 @@ public class WatermarkService {
 					lowerBound = nextMeasurement.getValue();
 				}
 			}
-
 			// v(t-1) < v(t) = v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) > 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) == 0) {
@@ -149,9 +148,12 @@ public class WatermarkService {
 			// v(t-1) = v(t) = v(t+1)
 			else if (measurement.getValue().compareTo(prevMeasurement.getValue()) == 0
 					&& measurement.getValue().compareTo(nextMeasurement.getValue()) == 0) {
+				// do nothing
 			}
 
+			// compute ranges and range sizes
 			List<Range<BigDecimal>> ranges = new LinkedList<Range<BigDecimal>>();
+
 			BigDecimal lowerRange = measurement.getValue().subtract(lowerBound);
 			BigDecimal upperRange = upperBound.subtract(measurement.getValue());
 
@@ -160,10 +162,13 @@ public class WatermarkService {
 			BigDecimal upperRangeSize = upperRange
 					.divide(BigDecimal.valueOf(usabilityConstraint.getNumberOfRanges() / 2), 15, RoundingMode.HALF_UP);
 
+			// compute final ranges and assign probabilities
 			for (int j = 0; j < (usabilityConstraint.getNumberOfRanges() / 2); j++) {
+
 				BigDecimal lowerRangeMinimum = lowerRange.negate().add(lowerRangeSize.multiply(BigDecimal.valueOf(j)));
 				BigDecimal lowerRangeMaximum = lowerRange.negate()
 						.add(lowerRangeSize.multiply(BigDecimal.valueOf(j + 1)));
+
 				BigDecimal upperRangeMinimum = upperRange.subtract(upperRangeSize.multiply(BigDecimal.valueOf(j + 1)));
 				BigDecimal upperRangeMaximum = upperRange.subtract(upperRangeSize.multiply(BigDecimal.valueOf(j)));
 
@@ -177,13 +182,14 @@ public class WatermarkService {
 					ranges.add(new Range<BigDecimal>(lowerRangeMinimum, lowerRangeMaximum, probabilities.get(j)));
 					ranges.add(new Range<BigDecimal>(upperRangeMinimum, upperRangeMaximum, probabilities.get(j)));
 				}
-			}
 
+			}
 			Collections.sort(ranges);
+
+			// select range
 			Range<BigDecimal> selectedRange = new Range<BigDecimal>(BigDecimal.valueOf(0), BigDecimal.valueOf(0));
 			BigDecimal randomNumber4RangeSelection = BigDecimal.valueOf(random.nextDouble());
 			BigDecimal currentValue = BigDecimal.valueOf(0.0);
-
 			for (int j = 0; j < ranges.size(); j++) {
 				Range<BigDecimal> range = ranges.get(j);
 				currentValue = currentValue.add(range.getValue());
@@ -193,6 +199,7 @@ public class WatermarkService {
 				}
 			}
 
+			// select mark
 			BigDecimal randomNumber4ValueSelection = BigDecimal.valueOf(random.nextDouble());
 			watermark[i] = selectedRange.getMinimum()
 					.add((selectedRange.getMaximum().subtract(selectedRange.getMinimum()))

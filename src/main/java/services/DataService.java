@@ -61,14 +61,15 @@ public class DataService {
 
 	private static List<Fragment> embedWatermarks(int dataUser, List<Fragment> fragments) {
 		LocalDateTime timestamp = LocalDateTime.now();
-		
+
 		for (int i = 0; i < fragments.size(); i++) {
 			Fragment fragment = fragments.get(i);
+
 			UsabilityConstraint usabilityConstraint = DatabaseService.getUsabilityConstraint(fragment.getType(),
 					fragment.getUnit());
 			Request request = DatabaseService.getRequest(dataUser, fragment.getDeviceId(), fragment.getType(),
 					fragment.getUnit(), fragment.getDate());
-			
+
 			if (request == null) {
 				int numberOfWatermark = 1 + DatabaseService.getNumberOfWatermark(fragment.getDeviceId(),
 						fragment.getType(), fragment.getUnit(), fragment.getDate());
@@ -77,19 +78,21 @@ public class DataService {
 				request = new Request(fragment.getDeviceId(), dataUser, fragment.getType(), fragment.getUnit(),
 						fragment.getDate(), numberOfWatermark, timestamps);
 				DatabaseService.insertRequest(request);
-			} else {
+			}
+			else {
 				request.getTimestamps().add(timestamp);
 				DatabaseService.updateRequest(request);
 			}
 
 			BigDecimal[] watermark = WatermarkService.generateWatermark(request, usabilityConstraint, fragment);
+
 			for (int j = 0; j < fragment.getMeasurements().size(); j++) {
 				BigDecimal watermarkedValue = fragment.getMeasurements().get(j).getValue().add(watermark[j]);
 				fragment.getMeasurements().get(j).setValue(watermarkedValue);
 			}
+
 			fragments.set(i, fragment);
 		}
-		
 		return fragments;
 	}
 }

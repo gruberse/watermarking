@@ -18,7 +18,7 @@ public class ContainerService {
 		timeService.stop();
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "FragmentationService.getFragments",
 				timeService.getTime());
-
+		
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKeys");
 		timeService = new TimeService();
 		if (randomSecretKey == true) {
@@ -32,7 +32,8 @@ public class ContainerService {
 			}
 		}
 		timeService.stop();
-		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKeys", timeService.getTime());
+		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "generateSecretKeys",
+				timeService.getTime());
 
 		LogService.log(LogService.SERVICE_LEVEL, "ContainerService", "DatabaseService.insertFragments");
 		timeService = new TimeService();

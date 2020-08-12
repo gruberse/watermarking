@@ -21,13 +21,15 @@ public class FragmentationService {
 
 	public static List<Fragment> getFragments(String fileName) {
 		List<Fragment> fragments = new LinkedList<>();
+
 		try {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 			JSONParser parser = new JSONParser();
+
 			JSONArray array = (JSONArray) parser.parse(new FileReader(FileService.FOLDER + fileName));
-			
 			for (Object measurementObject : array) {
 				JSONObject jsonMeasurement = (JSONObject) measurementObject;
+
 				String deviceId = (String) jsonMeasurement.get("deviceId");
 				String type = (String) jsonMeasurement.get("type");
 				String unit = (String) jsonMeasurement.get("unit");
@@ -36,11 +38,10 @@ public class FragmentationService {
 				if (timeString.contains("T")) {
 					timeString = timeString.replace("T", " ");
 				}
-				
 				if (timeString.contains(".")) {
 					timeString = timeString.split("\\.")[0];
-				}
 				
+				}
 				LocalDateTime time = LocalDateTime.parse(timeString, formatter);
 				BigDecimal value = new BigDecimal(jsonMeasurement.get("value").toString());
 				Measurement measurement = new Measurement(deviceId, type, unit, time, value);
@@ -64,7 +65,6 @@ public class FragmentationService {
 		} catch (ParseException ex) {
 			ex.printStackTrace();
 		}
-		
 		return fragments;
 	}
 }
