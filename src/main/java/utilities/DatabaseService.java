@@ -104,36 +104,6 @@ public class DatabaseService {
 		}
 	}
 
-	public static Fragment getFragment(String deviceId, String type, String unit, LocalDate date) {
-		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
-				"postgres", "admin")) {
-			String sql = "SELECT date, measurements, secret_key FROM fragment "
-					+ "WHERE device_id = ? AND type = ? AND unit = ? AND date = ?";
-
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.setString(1, deviceId);
-			preparedStatement.setString(2, type);
-			preparedStatement.setString(3, unit);
-			preparedStatement.setDate(4, Date.valueOf(date));
-
-			ResultSet resultSet = preparedStatement.executeQuery();
-			if (resultSet.next()) {
-				Fragment fragment = new Fragment(deviceId, type, unit, LocalDate.parse(resultSet.getString("date")),
-						resultSet.getLong("secret_key"));
-				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
-				Collections.sort(fragment.getMeasurements());
-				return fragment;
-			}
-
-			resultSet.close();
-			preparedStatement.close();
-			connection.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return null;
-	}
-
 	public static List<Fragment> getFragments(String deviceId, String type, String unit, LocalDate from, LocalDate to) {
 		List<Fragment> fragments = new LinkedList<>();
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
@@ -168,21 +138,20 @@ public class DatabaseService {
 		return fragments;
 	}
 
-	public static List<Fragment> getFragments(String type, String unit, LocalDate date) {
+	public static List<Fragment> getFragments(String type, String unit) {
 		List<Fragment> fragments = new LinkedList<>();
 		try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/watermarking",
 				"postgres", "admin")) {
-			String sql = "SELECT * FROM fragment WHERE type = ? AND unit = ? AND date = ?";
+			String sql = "SELECT * FROM fragment WHERE type = ? AND unit = ?";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, type);
 			preparedStatement.setString(2, unit);
-			preparedStatement.setDate(3, Date.valueOf(date));
 
 			ResultSet resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {
-				Fragment fragment = new Fragment(resultSet.getString("device_id"), type, unit, date,
-						resultSet.getLong("secret_key"));
+				Fragment fragment = new Fragment(resultSet.getString("device_id"), type, unit,
+						LocalDate.parse(resultSet.getString("date")), resultSet.getLong("secret_key"));
 				fragment.setMeasurementsFromJsonArrayString(resultSet.getString("measurements"));
 				Collections.sort(fragment.getMeasurements());
 				fragments.add(fragment);

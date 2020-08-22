@@ -77,18 +77,16 @@ public class DetectionService {
 					.getUsabilityConstraint(suspiciousFragment.getType(), suspiciousFragment.getUnit());
 
 			for (Fragment fragment : DatabaseService.getFragments(suspiciousFragment.getType(),
-					suspiciousFragment.getUnit(), suspiciousFragment.getDate())) {
+					suspiciousFragment.getUnit())) {
 				HashMap<Integer, Integer> matches = getMatchingMeasurements(suspiciousFragment, fragment);
 
-				if (matches.size() == suspiciousFragment.getMeasurements().size()) {
-					BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment,
-							usabilityConstraint, matches);
+				BigDecimal fragmentSimilarity = getFragmentSimilarity(suspiciousFragment, fragment, usabilityConstraint,
+						matches);
 
-					if (fragmentSimilarity.compareTo(matchingFragmentSimilarity) > 0) {
-						matchingFragmentSimilarity = fragmentSimilarity;
-						matchingFragment = fragment;
-						matchingMeasurements = matches;
-					}
+				if (fragmentSimilarity.compareTo(matchingFragmentSimilarity) > 0) {
+					matchingFragmentSimilarity = fragmentSimilarity;
+					matchingFragment = fragment;
+					matchingMeasurements = matches;
 				}
 			}
 
@@ -125,7 +123,7 @@ public class DetectionService {
 					for (DataUserWatermark matchingWatermark : matchingWatermarks) {
 						report = report + "\n\t\t" + matchingWatermark.toString();
 					}
-					
+
 					setOfMatchingWatermarks.add(matchingWatermarks);
 				} else {
 					report = report + "\nno matching watermarks detected";
@@ -265,7 +263,7 @@ public class DetectionService {
 		similarity = similarity.divide(BigDecimal.valueOf(matchingMeasurements.size()), 4, RoundingMode.HALF_UP);
 		return similarity;
 	}
-	
+
 	private static List<DataUserWatermark> getDatasetLeakers(int datasetSize,
 			List<List<DataUserWatermark>> setOfMatchingWatermarks) {
 		List<DataUserWatermark> datasetLeakers = new LinkedList<>();
